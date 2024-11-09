@@ -1,0 +1,241 @@
+import { LightningElement, track, wire, api } from 'lwc';
+import getInsuranceProducts from '@salesforce/apex/InsuranceController.getInsuranceProducts';
+import getBasePremium from '@salesforce/apex/InsuranceController.getBasePremium';
+import getActivePriceBookIdForProduct from '@salesforce/apex/InsuranceController.getActivePriceBookIdForProduct';
+import { createRecord } from 'lightning/uiRecordApi';
+import LEAD_OBJECT from '@salesforce/schema/Lead';
+import GENDER_FIELD from '@salesforce/schema/Lead.TIS_Gender__c';
+import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
+
+export default class LeadSimulation extends LightningElement {
+    @track name = '';
+    @track nif = '';
+    @track licensePlate = '';
+    @track gender = ''; 
+    @track carValue = '';
+    @track age = '';
+    @track productId = '';
+    @track priceBookId = '';
+    @track basePremium = 0;
+    @track finalPremium = 0;
+    @track discountPercentage = 0;
+    @track submissionMessage = '';
+
+    @track showLicensePlateScreen = true;
+    @track showPriceScreen = false;
+    @track showNameNIFScreen = false;
+    @track showDetailsForm = false;
+    @track showPriceDisplay = false;
+    @track renderFlow = false; // Flag to control flow rendering
+    
+
+    @api flowApiName = 'fetch_Premium_in_Leads_AutoLaunchFlow';
+    @track genderOptions = [];
+    @track productOptions = [];
+    recordTypeId;
+
+
+
+    get randomPrice() {
+        // Generate and return a random integer between 21 and 29
+        return Math.floor(Math.random() * (29 - 21 + 1)) + 21;
+    }
+
+    checkPrice() {
+        console.log('Navigating to price screen');
+        this.showLicensePlateScreen = false;
+        this.showPriceScreen = true;
+    }
+
+    backToPriceScreen() {
+        this.showNameNIFScreen = false;
+        this.showPriceScreen = true;
+    }
+
+    backToNameNIF() {
+        this.showDetailsForm = false;
+        this.showNameNIFScreen = true;
+    }
+
+    nextToNameNIF() {
+        console.log('Navigating to name and NIF screen');
+        this.showPriceScreen = false;
+        this.showNameNIFScreen = true;
+    }
+
+    backToDetails() {
+        this.showPriceDisplay = false;
+        this.showDetailsForm = true;
+    }
+
+    nextToDetails() {
+        console.log('Navigating to details form');
+        this.showNameNIFScreen = false;
+        this.showDetailsForm = true;
+    }
+
+    leaveSimulation() {
+        this.showLicensePlateScreen = true;
+        this.showPriceScreen = false;
+        this.showNameNIFScreen = false;
+        this.showDetailsForm = false;
+        this.showPriceDisplay = false;
+        this.renderFlow = false;
+    }
+    
+    
+
+    // Fetch gender options
+    @wire(getObjectInfo, { objectApiName: LEAD_OBJECT })
+    wiredObjectInfo({ data, error }) {
+        if (data) {
+            this.recordTypeId = data.defaultRecordTypeId;
+            console.log('Fetched Record Type ID:', this.recordTypeId);
+        } else if (error) {
+            console.error('Error fetching record type info:', error);
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$recordTypeId', fieldApiName: GENDER_FIELD })
+    wiredGenderOptions({ data, error }) {
+        if (data) {
+            this.genderOptions = data.values;
+            console.log('Fetched Gender Options:', this.genderOptions);
+        } else if (error) {
+            console.error('Error fetching gender picklist values:', error);
+        }
+    }
+
+    // Fetch insurance products
+    @wire(getInsuranceProducts)
+    wiredProductOptions({ error, data }) {
+        if (data) {
+            this.productOptions = data.map(product => ({
+                label: product.Name,
+                value: product.Id
+            }));
+            console.log('Fetched Product Options:', this.productOptions);
+        } else if (error) {
+            console.error('Error fetching products:', error);
+        }
+    }
+
+    handleInputChange(event) {
+        const field = event.target.dataset.id;
+        this[field] = event.target.value;
+        console.log(`Updated ${field} to`, this[field]);
+    }
+
+    handleProductChange(event) {
+        this.productId = event.detail.value;
+        console.log('Product selected with ID:', this.productId);
+        this.fetchPriceBookId();
+    }
+
+    async fetchPriceBookId() {
+        if (this.productId) {
+            try {
+                const priceBookId = await getActivePriceBookIdForProduct({ productId: this.productId });
+                this.priceBookId = priceBookId;
+                console.log('Fetched Price Book ID:', this.priceBookId);
+                this.fetchBasePremium();
+            } catch (error) {
+                console.error('Error fetching Price Book ID:', error.message);
+            }
+        } else {
+            console.warn('No Product ID selected for fetching Price Book ID');
+        }
+    }
+
+    async fetchBasePremium() {
+        if (this.productId && this.priceBookId) {
+            try {
+                const basePremium = await getBasePremium({ productId: this.productId, priceBookId: this.priceBookId });
+                this.basePremium = basePremium;
+                console.log('Fetched Base Premium:', this.basePremium);
+            } catch (error) {
+                console.error('Error fetching base premium:', error.message);
+            }
+        } else {
+            console.error('Missing Product ID or Price Book ID for fetching Base Premium');
+        }
+    }
+
+    seePrices() {
+        this.renderFlow = true; // This renders the flow component
+        this.showDetailsForm = false;
+    
+        console.log('Preparing to pass input variables to flow');
+        console.log('Car Value:', this.carValue);
+        console.log('Age:', this.age);
+        console.log('Base Premium:', this.basePremium);
+    }
+    
+    get flowInputVariables() {
+        const inputVariables = [
+            { name: 'CarValue_CustomerInput', type: 'Number', value: parseInt(this.carValue) || 0 },
+            { name: 'Age_CustomerInput', type: 'Number', value: parseInt(this.age) || 0 },
+            { name: 'BasePremium_CustomerInput', type: 'Number', value: this.basePremium || 0 },
+            { name: 'ProductId', type: 'String', value: this.productId || '' },
+            { name: 'ActivePriceBookId', type: 'String', value: this.priceBookId || '' }
+        ];
+    
+        console.log('Input Variables for Flow:', JSON.stringify(inputVariables));
+        return inputVariables;
+    }
+    
+    
+    
+    
+    handleFlowStatusChange(event) {
+        console.log('123Flow status changed:', event.detail.status);
+    
+        if (event.detail.status === 'FINISHED_SCREEN') {
+            console.log('12345Flow finished, processing output variables:', event.detail.outputVariables);
+            
+            const outputVariables = event.detail.outputVariables;
+
+            outputVariables.forEach((variable) => {
+                console.log(`Output Variable - Name: ${variable.name}, Value: ${variable.value}, Type: ${variable.dataType}`);
+            });
+            if (outputVariables && outputVariables.length > 0) {
+                this.finalPremium = (outputVariables.find(item => item.name === 'Final_Premium')?.value || 0).toFixed(2);
+                this.discountPercentage = outputVariables.find(item => item.name === 'Discount_Percentage_Field')?.value || 0;
+                
+                console.log('Final Premium:', this.finalPremium);
+                console.log('Discount Percentage:', this.discountPercentage);
+                
+                this.renderFlow = false;
+                this.showPriceDisplay = true;
+            } else {
+                console.error('No output variables found from the flow');
+            }
+        } else {
+            console.log('Flow status:', event.detail.status);
+        }
+    }
+    
+
+    async createLead() {
+        const fields = {
+            LastName: this.name,
+            TIS_NIF__c: this.nif,
+            TIS_License_Plate__c: this.licensePlate,
+            TIS_Gender__c: this.gender,
+            TIS_Age__c: this.age,
+            Product2Id: this.productId,
+            TIS_Car_Value__c: this.carValue,
+            TIS_Final_Premium_Amount__c: this.finalPremium,
+            TIS_Discount_Percentage__c: this.discountPercentage
+        };
+        const recordInput = { apiName: LEAD_OBJECT.objectApiName, fields };
+        try {
+            await createRecord(recordInput);
+            this.submissionMessage = 'Lead created successfully!';
+            console.log('Lead created successfully');
+        } catch (error) {
+            console.error('Error creating Lead record:', error);
+            this.submissionMessage = 'Por agora é tudo. Obrigado e volte sempre!';
+        }
+    }
+}

@@ -1,0 +1,136 @@
+/* General Card Styling */
+.card-section {
+    background: #f8f9fa; /* Light gray for a soft background */
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 700px;
+    transition: box-shadow 0.3s ease-in-out;
+    text-align: left; /* Align text to the left */
+}
+
+.animated-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Final Page Styling */
+.card-section-final {
+    background: #ffffff; /* White for contrast */
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 600px;
+    text-align: center;
+}
+
+.icon-styled-final {
+    color: #3e8ed0; /* Primary blue */
+    margin-bottom: 15px;
+    font-size: 3rem;
+}
+
+.highlight-text-final {
+    color: #333;
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+/* Button Styling */
+.lightning-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 1rem !important;
+    color: #fff !important;
+    background-color: #3e8ed0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+
+.lightning-button:hover {
+    background-color: #2c6da4; /* Slightly darker blue */
+}
+
+.lightning-button.leave {
+    background-color: #ffd700; /* Yellow for leave button */
+    color: #333;
+}
+
+.lightning-button.leave:hover {
+    background-color: #e6be00; /* Slightly darker yellow */
+}
+
+.lightning-button:focus,
+.lightning-button:active {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Button Container for Screens */
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px; /* Adds space between the form and buttons */
+    gap: 20px; /* Adds space between the Back and Next buttons */
+}
+
+/* Button Container for Final Screen */
+.button-container-final {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Icon and Header Styling */
+.icon-styled {
+    color: #6c757d; /* Neutral gray */
+    margin-right: 10px;
+}
+
+.header-text {
+    color: #3e4a89;
+    font-size: 1.75rem;
+    font-weight: bold;
+}
+
+.card-title {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #3e4a89;
+    margin-bottom: 10px;
+}
+
+.card-subtitle {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.card-info-text {
+    font-size: 1.125rem;
+    color: #333;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+/* Utility Classes */
+.text-left {
+    text-align: left;
+}
+
+.text-center {
+    text-align: center;
+}
