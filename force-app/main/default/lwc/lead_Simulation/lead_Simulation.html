@@ -9,13 +9,12 @@
         </div>
     </div>
 
-
     <!-- Screen 2: Initial Price Estimate -->
     <div if:true={showPriceScreen} class="card-section animated-card">
         <div class="icon-text-container">
             <lightning-icon icon-name="utility:info" size="large" alternative-text="Info" class="icon-styled-info"></lightning-icon>
             <div class="card-info-text">
-                 You can get an insurance product with us starting from {randomPrice}€.
+                You can get an insurance product with us starting from {randomPrice}€.
             </div>
         </div>
         <div class="button-container">
@@ -46,7 +45,6 @@
         </div>
         <lightning-input label="Age" data-id="age" value={age} onchange={handleInputChange}></lightning-input>
         <lightning-input label="Car Value" data-id="carValue" value={carValue} onchange={handleInputChange}></lightning-input>
-        <lightning-combobox label="Type of Product" data-id="productId" options={productOptions} value={productId} onchange={handleProductChange}></lightning-combobox>
         <div class="button-container">
             <lightning-button label="Back" onclick={backToNameNIF}></lightning-button>
             <lightning-button label="See Prices" onclick={seePrices}></lightning-button>
@@ -55,28 +53,27 @@
 
     <!-- Flow Component to Calculate Premium -->
     <div if:true={renderFlow} class="flow-container animated-card">
-        <lightning-flow 
-            flow-api-name={flowApiName} 
-            flow-input-variables={flowInputVariables} 
-            onstatuschange={handleFlowStatusChange}>
-        </lightning-flow>
+        <lightning-flow flow-api-name={flowApiName} flow-input-variables={getFlowInputVariables} onstatuschange={handleFlowStatusChange}></lightning-flow>
     </div>
 
-<!-- Final Screen: Show Final Price and Option to Create Lead -->
-<div if:true={showPriceDisplay} class="card-section-final animated-card">
-    <lightning-icon icon-name="utility:money" size="large" alternative-text="Final Premium" class="icon-styled-final"></lightning-icon>
-    <div class="highlight-text-final">
-        Monthly premium : {finalPremium} €
+    <!-- Final Screen: Show Price Results -->
+    <div if:true={showPriceDisplay} class="card-section-final animated-card">
+        <h2 class="header-text">Insurance Price Details</h2>
+        <template for:each={priceResults} for:item="price">
+            <div key={price.productId} class="price-result-item">
+                <div class="product-name">{price.productName}</div>
+                <div class="price-info">
+                    <div>Monthly Premium: {price.monthlyPremium} €</div>
+                    <div>Semi-Annual Premium: {price.semiAnnualTotalAmount} € (Approx. {price.semiAnnualPremium} € per month)</div>
+                    <div>Annual Premium: {price.annualTotalAmount} € (Approx. {price.annualPremium} € per month)</div>
+                    <div>Discount Percentage: {price.discountPercentage}%</div>
+                </div>
+            </div>
+        </template>
+        <div class="button-container-final">
+            <lightning-button class="quote-button" label="Get a Quote" onclick={createLead}></lightning-button>
+            <lightning-button class="leave-button" variant="neutral" label="Leave" onclick={leaveSimulation}></lightning-button>
+        </div>
+        <p>{submissionMessage}</p>
     </div>
-    <div class="highlight-text-final">
-        Discount Percentage: {discountPercentage}%
-    </div>
-    <p>Do you want to receive a quote?</p>
-    <div class="button-container-final">
-        <lightning-button class="quote-button" label="Get a Quote" onclick={createLead}></lightning-button>
-        <lightning-button class="leave-button" variant="neutral" label="Leave" onclick={leaveSimulation}></lightning-button>
-    </div>
-    <p>{submissionMessage}</p>
-</div>
-
 </template>
