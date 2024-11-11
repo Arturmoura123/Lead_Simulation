@@ -124,7 +124,7 @@ export default class LeadSimulation extends LightningElement {
                 label: product.Name,
                 value: product.Id
             }));
-            console.log('Fetched Product Options:', this.productOptions);
+            console.log('Product Options:', JSON.stringify(this.productOptions));
         } else if (error) {
             console.error('Error fetching products:', error);
         }
@@ -154,7 +154,6 @@ export default class LeadSimulation extends LightningElement {
     
                 console.log('Product ID:', this.productId);
                 console.log('Price Book ID:', this.priceBookId);
-                console.log('Base Premium:', this.basePremium);
     
                 
                 this.renderFlow = true;
