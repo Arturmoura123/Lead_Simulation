@@ -33,6 +33,11 @@ export default class LeadSimulation extends LightningElement {
     @track genderOptions = [];
     @track productOptions = [];
     @track priceResults = [];
+    @track paymentOptions = [
+        { label: 'Monthly', value: 'monthly' },
+        { label: 'Biannual', value: 'biannual' },
+        { label: 'Annual', value: 'annual' }
+    ];
     recordTypeId;
 
 
@@ -138,6 +143,11 @@ export default class LeadSimulation extends LightningElement {
         for (const product of this.productOptions) {
             console.log(`Processing product: ${product.label}`);
             this.productId = product.value;
+            this.productName = product.label;
+
+            this.productDescription = this.getProductDescription(this.productName);
+            this.productCharacteristics = this.getProductCharacteristics(this.productName);
+
             try {
                 await this.fetchPriceBookId();
                 await this.fetchBasePremium();
@@ -146,8 +156,9 @@ export default class LeadSimulation extends LightningElement {
                 console.log('Price Book ID:', this.priceBookId);
                 console.log('Base Premium:', this.basePremium);
     
+                
                 this.renderFlow = true;
-                await this.delay(650); // Allow time for rendering
+                await this.delay(750); // Allow time for rendering
     
             } catch (error) {
                 console.error(`Error processing product ${product.label}:`, JSON.stringify(error));
@@ -213,56 +224,125 @@ export default class LeadSimulation extends LightningElement {
     
     
     
-handleFlowStatusChange(event) {
-    console.log('Flow status changed:', event.detail.status);
+    handleFlowStatusChange(event) {
+        console.log('Flow status changed:', event.detail.status);
 
-    if (event.detail.status === 'FINISHED_SCREEN') {
-        console.log('Flow finished, processing output variables:', event.detail.outputVariables);
+        if (event.detail.status === 'FINISHED_SCREEN') {
+            console.log('Flow finished, processing output variables:', event.detail.outputVariables);
 
-        const outputVariables = event.detail.outputVariables;
+            const outputVariables = event.detail.outputVariables;
 
-        if (outputVariables && outputVariables.length > 0) {
-            const finalPremium = (outputVariables.find(item => item.name === 'Final_Premium')?.value || 0).toFixed(2);
-            const discountPercentage = outputVariables.find(item => item.name === 'Discount_Percentage_Field')?.value || 0;
-            const monthlyPremium = outputVariables.find(item => item.name === 'MonthlyPremium_Equivalent')?.value || 0;
-            const semiAnnualPremium = outputVariables.find(item => item.name === 'SemiAnnualPremium_Equivalent')?.value || 0;
-            const annualPremium = outputVariables.find(item => item.name === 'AnnualPremium_Equivalent')?.value || 0;
+            if (outputVariables && outputVariables.length > 0) {
+                const finalPremium = (outputVariables.find(item => item.name === 'Final_Premium')?.value || 0).toFixed(2);
+                const discountPercentage = (outputVariables.find(item => item.name === 'Discount_Percentage_Field')?.value || 0).toFixed(2);
+                const monthlyPremium = (outputVariables.find(item => item.name === 'MonthlyPremium_Equivalent')?.value || 0).toFixed(2);
+                const semiAnnualPremium = (outputVariables.find(item => item.name === 'SemiAnnualPremium_Equivalent')?.value || 0).toFixed(2);
+                const annualPremium = (outputVariables.find(item => item.name === 'AnnualPremium_Equivalent')?.value || 0).toFixed(2);
 
-            // Calculate semi-annual and annual total amounts
-            const semiAnnualTotal = (semiAnnualPremium * 6).toFixed(2);
-            const annualTotal = (annualPremium * 12).toFixed(2);
+                // Calculate semi-annual and annual total amounts
+                const semiAnnualTotal = (semiAnnualPremium * 6).toFixed(2);
+                const annualTotal = (annualPremium * 12).toFixed(2);
 
-            // Log values for verification
-            console.log('Final Premium:', finalPremium);
-            console.log('Discount Percentage:', discountPercentage);
-            console.log('Monthly Premium Equivalent:', monthlyPremium);
-            console.log('Semi-Annual Premium Equivalent:', semiAnnualPremium);
-            console.log('Annual Premium Equivalent:', annualPremium);
-            console.log('Total Semi-Annual Amount:', semiAnnualTotal);
-            console.log('Total Annual Amount:', annualTotal);
+                // Log values for verification
+                console.log('Final Premium:', finalPremium);
+                console.log('Discount Percentage:', discountPercentage);
+                console.log('Monthly Premium Equivalent:', monthlyPremium);
+                console.log('Semi-Annual Premium Equivalent:', semiAnnualPremium);
+                console.log('Annual Premium Equivalent:', annualPremium);
+                console.log('Total Semi-Annual Amount:', semiAnnualTotal);
+                console.log('Total Annual Amount:', annualTotal);
 
-            // Store the result in the priceResults array
-            this.priceResults.push({
-                finalPremium: finalPremium,
-                discountPercentage: discountPercentage,
-                monthlyPremium: monthlyPremium,
-                semiAnnualPremium: semiAnnualPremium,
-                annualPremium: annualPremium,
-                semiAnnualTotalAmount: semiAnnualTotal,
-                annualTotalAmount: annualTotal
-            });
+                // Store the result in the priceResults array
+                this.priceResults.push({
+                    productName: this.productName,
+                    productDescription: this.productDescription,
+                    productCharacteristics: this.productCharacteristics,
+                    finalPremium: finalPremium,
+                    discountPercentage: discountPercentage,
+                    monthlyPremium: monthlyPremium,
+                    semiAnnualPremium: semiAnnualPremium,
+                    annualPremium: annualPremium,
+                    semiAnnualTotalAmount: semiAnnualTotal,
+                    annualTotalAmount: annualTotal
+                });
 
-            // Hide the flow after completion
-            this.renderFlow = false;
+                // Hide the flow after completion
+                this.renderFlow = false;
+            } else {
+                console.error('No output variables found from the flow');
+            }
         } else {
-            console.error('No output variables found from the flow');
+            console.log('Flow status:', event.detail.status);
         }
-    } else {
-        console.log('Flow status:', event.detail.status);
     }
-}
-    
-    
+        
+        
+
+    handleSelectMonthly(event) {
+        const selectedIndex = event.target.dataset.index;
+        const selectedPlan = this.priceResults[selectedIndex];
+        console.log('Selected Monthly Plan:', selectedPlan);
+        // Implement further actions here (e.g., update UI or save the choice)
+    }
+
+    handleSelectBiannual(event) {
+        const selectedIndex = event.target.dataset.index;
+        const selectedPlan = this.priceResults[selectedIndex];
+        console.log('Selected Biannual Plan:', selectedPlan);
+        // Implement further actions here (e.g., update UI or save the choice)
+    }
+
+    handleSelectAnnual(event) {
+        const selectedIndex = event.target.dataset.index;
+        const selectedPlan = this.priceResults[selectedIndex];
+        console.log('Selected Annual Plan:', selectedPlan);
+        // Implement further actions here (e.g., update UI or save the choice)
+    }
+
+    getProductDescription(productName) {
+        console.log('Fetching Description for:', productName);
+        if (productName === 'Comprehensive') {
+            return 'Comprehensive coverage includes protection against a variety of incidents, providing peace of mind for full vehicle protection.';
+        } else if (productName === 'Third-Party') {
+            return 'Third-party insurance offers basic coverage, protecting against damage you may cause to others.';
+        } else if (productName === 'Extended Third-Party') {
+            return 'Extended third-party coverage includes additional benefits such as theft protection and fire damage.';
+        } else {
+            return 'Standard insurance plan with essential coverage.';
+        }
+    }
+
+    getProductCharacteristics(productName) {
+        console.log('Fetching Description for:', productName);
+        if (productName === 'Comprehensive') {
+            return [
+                'Covers vehicle damage from natural disasters',
+                'Includes protection against theft and vandalism',
+                'Third-party liability coverage included',
+                'Full peace of mind with extensive protection'
+            ];
+        } else if (productName === 'Third-Party') {
+            return [
+                'Basic coverage for third-party damage',
+                'Affordable option for minimum protection',
+                'Mandatory by law in most regions',
+                'Limited coverage for personal vehicle damage'
+            ];
+        } else if (productName === 'Extended Third-Party') {
+            return [
+                'Additional coverage for theft and fire',
+                'Includes third-party liability',
+                'For those wanting more than basic protection',
+                'Affordable extended protection'
+            ];
+        } else {
+            return [
+                'Essential coverage with basic protection',
+                'Meets legal requirements',
+                'Minimal personal vehicle damage protection'
+            ];
+        }
+    }
 
     async createLead() {
         const fields = {
