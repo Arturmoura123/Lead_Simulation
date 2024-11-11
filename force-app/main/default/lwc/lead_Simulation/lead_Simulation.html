@@ -56,17 +56,19 @@
         <lightning-flow flow-api-name={flowApiName} flow-input-variables={getFlowInputVariables} onstatuschange={handleFlowStatusChange}></lightning-flow>
     </div>
 
-    <!-- Final Screen: Show Price Results -->
     <div if:true={showPriceDisplay} class="card-section-final animated-card">
         <h2 class="header-text">Insurance Price Details</h2>
-        <template for:each={priceResults} for:item="price">
-            <div key={price.productId} class="price-result-item">
-                <div class="product-name">{price.productName}</div>
+        <template for:each={priceResults} for:item="price" for:index="index">
+            <div key={price.ProductId} class="price-result-item">
+                <h3 class="product-name">{price.productName}</h3>
                 <div class="price-info">
-                    <div>Monthly Premium: {price.monthlyPremium} €</div>
-                    <div>Semi-Annual Premium: {price.semiAnnualTotalAmount} € (Approx. {price.semiAnnualPremium} € per month)</div>
-                    <div>Annual Premium: {price.annualTotalAmount} € (Approx. {price.annualPremium} € per month)</div>
-                    <div>Discount Percentage: {price.discountPercentage}%</div>
+                    <p><strong>Final Premium:</strong> {price.finalPremium} €</p>
+                    <p><strong>Monthly Premium Equivalent:</strong> {price.monthlyPremium} €</p>
+                    <p><strong>Semi-Annual Premium Equivalent:</strong> {price.semiAnnualPremium} €</p>
+                    <p><strong>Annual Premium Equivalent:</strong> {price.annualPremium} €</p>
+                    <p><strong>Total Semi-Annual Amount:</strong> {price.semiAnnualTotalAmount} €</p>
+                    <p><strong>Total Annual Amount:</strong> {price.annualTotalAmount} €</p>
+                    <p><strong>Discount Percentage:</strong> {price.discountPercentage}%</p>
                 </div>
             </div>
         </template>
@@ -76,4 +78,8 @@
         </div>
         <p>{submissionMessage}</p>
     </div>
+    
+
 </template>
+
+    

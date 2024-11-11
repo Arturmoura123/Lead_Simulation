@@ -47,6 +47,8 @@ export default class LeadSimulation extends LightningElement {
 
     @api flowApiName = 'fetch_Premium_in_Leads_AutoLaunchFlow';
     @track genderOptions = [];
+    @track productOptions = [];
+    @track priceResults = [];
     recordTypeId;
 
     handleInputChange(event) {
@@ -55,6 +57,55 @@ export default class LeadSimulation extends LightningElement {
         console.log(`Updated ${field}: ${this[field]}`);
     }
 
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    checkPrice() {
+        console.log('Navigating to price screen');
+        this.showLicensePlateScreen = false;
+        this.showPriceScreen = true;
+    }
+
+    backToPriceScreen() {
+        this.showNameNIFScreen = false;
+        this.showPriceScreen = true;
+    }
+
+    backToNameNIF() {
+        this.showDetailsForm = false;
+        this.showNameNIFScreen = true;
+    }
+
+    nextToNameNIF() {
+        console.log('Navigating to name and NIF screen');
+        this.showPriceScreen = false;
+        this.showNameNIFScreen = true;
+    }
+
+    backToDetails() {
+        this.showPriceDisplay = false;
+        this.showDetailsForm = true;
+    }
+
+    nextToDetails() {
+        console.log('Navigating to details form');
+        this.showNameNIFScreen = false;
+        this.showDetailsForm = true;
+    }
+
+    leaveSimulation() {
+        this.showLicensePlateScreen = true;
+        this.showPriceScreen = false;
+        this.showNameNIFScreen = false;
+        this.showDetailsForm = false;
+        this.showPriceDisplay = false;
+        this.renderFlow = false;
+    }
+    
+    
+
+    // Fetch gender options
     @wire(getObjectInfo, { objectApiName: LEAD_OBJECT })
     wiredObjectInfo({ data, error }) {
         if (data) {
@@ -94,63 +145,45 @@ export default class LeadSimulation extends LightningElement {
         this.showPriceScreen = true;
     }
 
-    nextToNameNIF() {
-        console.log('Navigating to Name and NIF input screen');
-        this.showPriceScreen = false;
-        this.showNameNIFScreen = true;
-    }
-
-    nextToDetails() {
-        console.log('Navigating to additional details form');
-        this.showNameNIFScreen = false;
-        this.showDetailsForm = true;
-    }
-
-    seePrices() {
-        console.log('Navigating to see prices screen and triggering product processing');
-        console.log(`Car Value: ${this.carValue}`);
-        console.log(`Age: ${this.age}`);
-        this.showDetailsForm = false;
-        this.processAllProducts();
-    }
-
     async processAllProducts() {
         console.log('Starting the process for all products');
         this.priceResults = [];
-
+    
         for (const product of this.productOptions) {
             console.log(`Processing product: ${product.label}`);
             this.productId = product.value;
             try {
                 await this.fetchPriceBookId();
                 await this.fetchBasePremium();
-
-                console.log('Productid:' + this.productId);
-                console.log('PricebookID:' + this.priceBookId);
-                console.log('Basepremium:' + this.basePremium);
-
-                const flowInputs = this.getFlowInputVariables(this.basePremium, this.productId, this.priceBookId);
-                console.log('Triggering flow with inputs:', JSON.stringify(flowInputs));
-
+    
+                console.log('Product ID:', this.productId);
+                console.log('Price Book ID:', this.priceBookId);
+                console.log('Base Premium:', this.basePremium);
+    
                 this.renderFlow = true;
-                await this.delay(450);
-
+                await this.delay(650); // Allow time for rendering
+    
             } catch (error) {
-                console.error(`Error processing product ${product.label}:`, error);
+                console.error(`Error processing product ${product.label}:`, JSON.stringify(error));
             }
         }
-
+    
         console.log('Completed processing all products');
         this.showPriceDisplay = true;
+        
     }
-
+    
     async fetchPriceBookId() {
-        console.log(`Fetching price book ID for productId: ${this.productId}`);
-        try {
-            this.priceBookId = await getActivePriceBookIdForProduct({ productId: this.productId });
-            console.log('Fetched Price Book ID:', this.priceBookId);
-        } catch (error) {
-            console.error('Error fetching Price Book ID:', error.message);
+        if (this.productId) {
+            try {
+                const priceBookId = await getActivePriceBookIdForProduct({ productId: this.productId });
+                this.priceBookId = priceBookId;
+                console.log('Fetched Price Book ID:', this.priceBookId);
+            } catch (error) {
+                console.error('Error fetching Price Book ID:', error.message);
+            }
+        } else {
+            console.warn('No Product ID selected for fetching Price Book ID');
         }
     }
 
@@ -165,77 +198,80 @@ export default class LeadSimulation extends LightningElement {
         }
     }
 
-    getFlowInputVariables(basePremium, productId, priceBookId) {
-        console.log('Preparing flow input variables');
-
-        const inputs = [
-            { name: 'CarValue_CustomerInput', type: 'Number', value: this.carValue || 0 },
-            { name: 'Age_CustomerInput', type: 'Number', value: this.age || 0 },
-            { name: 'BasePremium', type: 'Number', value: basePremium || 0 },
-            { name: 'ProductId', type: 'String', value: productId || '' },
-            { name: 'ActivePriceBookId', type: 'String', value: priceBookId || '' }
+    seePrices() {
+        
+        this.showDetailsForm = false;
+        this.processAllProducts();
+    
+        console.log('Preparing to pass input variables to flow');
+        console.log('Car Value:', this.carValue);
+        console.log('Age:', this.age);
+        console.log('Base Premium:', this.basePremium);
+    }
+    
+    get flowInputVariables() {
+        const inputVariables = [
+            { name: 'CarValue_CustomerInput', type: 'Number', value: parseInt(this.carValue) || 0 },
+            { name: 'Age_CustomerInput', type: 'Number', value: parseInt(this.age) || 0 },
+            { name: 'ProductId', type: 'String', value: this.productId || '' },
+            { name: 'ActivePriceBookId', type: 'String', value: this.priceBookId || '' }
         ];
         console.log('Input Variables for Flow:', JSON.stringify(inputs));
         return inputs;
     }
+    
+    
+    
+    
+handleFlowStatusChange(event) {
+    console.log('Flow status changed:', event.detail.status);
 
-    handleFlowStatusChange(event) {
-        console.log('Flow status changed:', event.detail.status);
-    
-        if (event.detail.status === 'FINISHED_SCREEN') {
-            console.log('Flow finished, processing output variables:', event.detail.outputVariables);
-    
-            const outputVariables = event.detail.outputVariables;
-    
-            if (outputVariables && outputVariables.length > 0) {
-                outputVariables.forEach((variable) => {
-                    console.log(`Output Variable - Name: ${variable.name}, Value: ${variable.value}, Type: ${variable.dataType}`);
-                });
-    
-                // Capture and assign output variable values
-                this.monthlyPremium = outputVariables.find(item => item.name === 'MonthlyPremium_Equivalent')?.value || 0;
-                this.semiAnnualPremium = outputVariables.find(item => item.name === 'SemiAnnualPremium_Equivalent')?.value || 0;
-                this.annualPremium = outputVariables.find(item => item.name === 'AnnualPremium_Equivalent')?.value || 0;
-                this.finalPremium = outputVariables.find(item => item.name === 'Final_Premium')?.value || 0;
-                this.discountPercentage = outputVariables.find(item => item.name === 'Discount_Percentage_Field')?.value || 0;
-                this.test_output_variable = outputVariables.find(item => item.name === 'test_output_variable')?.value || 0;
-                
-                // Calculate semi-annual and annual total amounts based on monthly equivalents
-                const semiAnnualTotal = (this.semiAnnualPremium * 6).toFixed(2);
-                const annualTotal = (this.annualPremium * 12).toFixed(2);
+    if (event.detail.status === 'FINISHED_SCREEN') {
+        console.log('Flow finished, processing output variables:', event.detail.outputVariables);
 
-                // Log calculated values for verification
-                console.log('Monthly Premium:', this.monthlyPremium);
-                console.log('Semi-Annual Premium (per month):', this.semiAnnualPremium);
-                console.log('Annual Premium (per month):', this.annualPremium);
-                console.log('Total Semi-Annual Amount:', semiAnnualTotal);
-                console.log('Total Annual Amount:', annualTotal);
-                console.log('Final Premium:', this.finalPremium);
-                console.log('Discount Percentage:', this.discountPercentage);
-                console.log('Test variable:', this.test_output_variable);
+        const outputVariables = event.detail.outputVariables;
 
-                // Push results into priceResults or assign them to variables as needed
-                this.priceResults.push({
-                    productId: this.productId,
-                    productName: this.productOptions.find(option => option.value === this.productId)?.label || 'Unknown Product',
-                    monthlyPremium: this.monthlyPremium,
-                    semiAnnualPremium: this.semiAnnualPremium,
-                    annualPremium: this.annualPremium,
-                    semiAnnualTotalAmount: semiAnnualTotal,
-                    annualTotalAmount: annualTotal,
-                    discountPercentage: this.discountPercentage
-                });
+        if (outputVariables && outputVariables.length > 0) {
+            const finalPremium = (outputVariables.find(item => item.name === 'Final_Premium')?.value || 0).toFixed(2);
+            const discountPercentage = outputVariables.find(item => item.name === 'Discount_Percentage_Field')?.value || 0;
+            const monthlyPremium = outputVariables.find(item => item.name === 'MonthlyPremium_Equivalent')?.value || 0;
+            const semiAnnualPremium = outputVariables.find(item => item.name === 'SemiAnnualPremium_Equivalent')?.value || 0;
+            const annualPremium = outputVariables.find(item => item.name === 'AnnualPremium_Equivalent')?.value || 0;
 
-    
-                this.renderFlow = false;
-                
-            } else {
-                console.error('No output variables found from the flow');
-            }
+            // Calculate semi-annual and annual total amounts
+            const semiAnnualTotal = (semiAnnualPremium * 6).toFixed(2);
+            const annualTotal = (annualPremium * 12).toFixed(2);
+
+            // Log values for verification
+            console.log('Final Premium:', finalPremium);
+            console.log('Discount Percentage:', discountPercentage);
+            console.log('Monthly Premium Equivalent:', monthlyPremium);
+            console.log('Semi-Annual Premium Equivalent:', semiAnnualPremium);
+            console.log('Annual Premium Equivalent:', annualPremium);
+            console.log('Total Semi-Annual Amount:', semiAnnualTotal);
+            console.log('Total Annual Amount:', annualTotal);
+
+            // Store the result in the priceResults array
+            this.priceResults.push({
+                finalPremium: finalPremium,
+                discountPercentage: discountPercentage,
+                monthlyPremium: monthlyPremium,
+                semiAnnualPremium: semiAnnualPremium,
+                annualPremium: annualPremium,
+                semiAnnualTotalAmount: semiAnnualTotal,
+                annualTotalAmount: annualTotal
+            });
+
+            // Hide the flow after completion
+            this.renderFlow = false;
         } else {
-            console.log('Flow status:', event.detail.status);
+            console.error('No output variables found from the flow');
         }
+    } else {
+        console.log('Flow status:', event.detail.status);
     }
+}
+    
     
 
     leaveSimulation() {
