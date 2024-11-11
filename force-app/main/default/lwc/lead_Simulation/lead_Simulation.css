@@ -134,3 +134,37 @@
 .text-center {
     text-align: center;
 }
+
+.card-section-final {
+    background: #ffffff; /* White background */
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 700px;
+    text-align: center;
+    border: 1px solid #e6e6e6; /* Light border for definition */
+}
+
+.price-result-item {
+    background-color: #ffffff; /* White background for contrast */
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px; /* Space between each plan */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: left; /* Align text to the left for readability */
+}
+
+.price-info p {
+    margin: 5px 0;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: #333;
+}
+
+.product-name {
+    font-size: 1.5rem;
+    color: #3e4a89; /* Primary color */
+    margin-bottom: 10px;
+    text-align: left;
+}

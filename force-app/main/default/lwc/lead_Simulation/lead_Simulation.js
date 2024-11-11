@@ -32,6 +32,7 @@ export default class LeadSimulation extends LightningElement {
     @api flowApiName = 'fetch_Premium_in_Leads_AutoLaunchFlow';
     @track genderOptions = [];
     @track productOptions = [];
+    @track priceResults = [];
     recordTypeId;
 
 
@@ -39,6 +40,10 @@ export default class LeadSimulation extends LightningElement {
     get randomPrice() {
         // Generate and return a random integer between 21 and 29
         return Math.floor(Math.random() * (29 - 21 + 1)) + 21;
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     checkPrice() {
@@ -126,19 +131,40 @@ export default class LeadSimulation extends LightningElement {
         console.log(`Updated ${field} to`, this[field]);
     }
 
-    handleProductChange(event) {
-        this.productId = event.detail.value;
-        console.log('Product selected with ID:', this.productId);
-        this.fetchPriceBookId();
+    async processAllProducts() {
+        console.log('Starting the process for all products');
+        this.priceResults = [];
+    
+        for (const product of this.productOptions) {
+            console.log(`Processing product: ${product.label}`);
+            this.productId = product.value;
+            try {
+                await this.fetchPriceBookId();
+                await this.fetchBasePremium();
+    
+                console.log('Product ID:', this.productId);
+                console.log('Price Book ID:', this.priceBookId);
+                console.log('Base Premium:', this.basePremium);
+    
+                this.renderFlow = true;
+                await this.delay(650); // Allow time for rendering
+    
+            } catch (error) {
+                console.error(`Error processing product ${product.label}:`, JSON.stringify(error));
+            }
+        }
+    
+        console.log('Completed processing all products');
+        this.showPriceDisplay = true;
+        
     }
-
+    
     async fetchPriceBookId() {
         if (this.productId) {
             try {
                 const priceBookId = await getActivePriceBookIdForProduct({ productId: this.productId });
                 this.priceBookId = priceBookId;
                 console.log('Fetched Price Book ID:', this.priceBookId);
-                this.fetchBasePremium();
             } catch (error) {
                 console.error('Error fetching Price Book ID:', error.message);
             }
@@ -162,8 +188,9 @@ export default class LeadSimulation extends LightningElement {
     }
 
     seePrices() {
-        this.renderFlow = true; // This renders the flow component
+        
         this.showDetailsForm = false;
+        this.processAllProducts();
     
         console.log('Preparing to pass input variables to flow');
         console.log('Car Value:', this.carValue);
@@ -175,7 +202,6 @@ export default class LeadSimulation extends LightningElement {
         const inputVariables = [
             { name: 'CarValue_CustomerInput', type: 'Number', value: parseInt(this.carValue) || 0 },
             { name: 'Age_CustomerInput', type: 'Number', value: parseInt(this.age) || 0 },
-            { name: 'BasePremium_CustomerInput', type: 'Number', value: this.basePremium || 0 },
             { name: 'ProductId', type: 'String', value: this.productId || '' },
             { name: 'ActivePriceBookId', type: 'String', value: this.priceBookId || '' }
         ];
@@ -187,33 +213,55 @@ export default class LeadSimulation extends LightningElement {
     
     
     
-    handleFlowStatusChange(event) {
-        console.log('123Flow status changed:', event.detail.status);
-    
-        if (event.detail.status === 'FINISHED_SCREEN') {
-            console.log('12345Flow finished, processing output variables:', event.detail.outputVariables);
-            
-            const outputVariables = event.detail.outputVariables;
+handleFlowStatusChange(event) {
+    console.log('Flow status changed:', event.detail.status);
 
-            outputVariables.forEach((variable) => {
-                console.log(`Output Variable - Name: ${variable.name}, Value: ${variable.value}, Type: ${variable.dataType}`);
+    if (event.detail.status === 'FINISHED_SCREEN') {
+        console.log('Flow finished, processing output variables:', event.detail.outputVariables);
+
+        const outputVariables = event.detail.outputVariables;
+
+        if (outputVariables && outputVariables.length > 0) {
+            const finalPremium = (outputVariables.find(item => item.name === 'Final_Premium')?.value || 0).toFixed(2);
+            const discountPercentage = outputVariables.find(item => item.name === 'Discount_Percentage_Field')?.value || 0;
+            const monthlyPremium = outputVariables.find(item => item.name === 'MonthlyPremium_Equivalent')?.value || 0;
+            const semiAnnualPremium = outputVariables.find(item => item.name === 'SemiAnnualPremium_Equivalent')?.value || 0;
+            const annualPremium = outputVariables.find(item => item.name === 'AnnualPremium_Equivalent')?.value || 0;
+
+            // Calculate semi-annual and annual total amounts
+            const semiAnnualTotal = (semiAnnualPremium * 6).toFixed(2);
+            const annualTotal = (annualPremium * 12).toFixed(2);
+
+            // Log values for verification
+            console.log('Final Premium:', finalPremium);
+            console.log('Discount Percentage:', discountPercentage);
+            console.log('Monthly Premium Equivalent:', monthlyPremium);
+            console.log('Semi-Annual Premium Equivalent:', semiAnnualPremium);
+            console.log('Annual Premium Equivalent:', annualPremium);
+            console.log('Total Semi-Annual Amount:', semiAnnualTotal);
+            console.log('Total Annual Amount:', annualTotal);
+
+            // Store the result in the priceResults array
+            this.priceResults.push({
+                finalPremium: finalPremium,
+                discountPercentage: discountPercentage,
+                monthlyPremium: monthlyPremium,
+                semiAnnualPremium: semiAnnualPremium,
+                annualPremium: annualPremium,
+                semiAnnualTotalAmount: semiAnnualTotal,
+                annualTotalAmount: annualTotal
             });
-            if (outputVariables && outputVariables.length > 0) {
-                this.finalPremium = (outputVariables.find(item => item.name === 'Final_Premium')?.value || 0).toFixed(2);
-                this.discountPercentage = outputVariables.find(item => item.name === 'Discount_Percentage_Field')?.value || 0;
-                
-                console.log('Final Premium:', this.finalPremium);
-                console.log('Discount Percentage:', this.discountPercentage);
-                
-                this.renderFlow = false;
-                this.showPriceDisplay = true;
-            } else {
-                console.error('No output variables found from the flow');
-            }
+
+            // Hide the flow after completion
+            this.renderFlow = false;
         } else {
-            console.log('Flow status:', event.detail.status);
+            console.error('No output variables found from the flow');
         }
+    } else {
+        console.log('Flow status:', event.detail.status);
     }
+}
+    
     
 
     async createLead() {

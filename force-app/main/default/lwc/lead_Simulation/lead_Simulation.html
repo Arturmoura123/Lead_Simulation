@@ -9,7 +9,6 @@
         </div>
     </div>
 
-
     <!-- Screen 2: Initial Price Estimate -->
     <div if:true={showPriceScreen} class="card-section animated-card">
         <div class="icon-text-container">
@@ -46,7 +45,6 @@
         </div>
         <lightning-input label="Age" data-id="age" value={age} onchange={handleInputChange}></lightning-input>
         <lightning-input label="Car Value" data-id="carValue" value={carValue} onchange={handleInputChange}></lightning-input>
-        <lightning-combobox label="Type of Product" data-id="productId" options={productOptions} value={productId} onchange={handleProductChange}></lightning-combobox>
         <div class="button-container">
             <lightning-button label="Back" onclick={backToNameNIF}></lightning-button>
             <lightning-button label="See Prices" onclick={seePrices}></lightning-button>
@@ -62,21 +60,30 @@
         </lightning-flow>
     </div>
 
-<!-- Final Screen: Show Final Price and Option to Create Lead -->
-<div if:true={showPriceDisplay} class="card-section-final animated-card">
-    <lightning-icon icon-name="utility:money" size="large" alternative-text="Final Premium" class="icon-styled-final"></lightning-icon>
-    <div class="highlight-text-final">
-        Monthly premium : {finalPremium} €
+    <div if:true={showPriceDisplay} class="card-section-final animated-card">
+        <h2 class="header-text">Insurance Price Details</h2>
+        <template for:each={priceResults} for:item="price" for:index="index">
+            <div key={price.ProductId} class="price-result-item">
+                <h3 class="product-name">{price.productName}</h3>
+                <div class="price-info">
+                    <p><strong>Final Premium:</strong> {price.finalPremium} €</p>
+                    <p><strong>Monthly Premium Equivalent:</strong> {price.monthlyPremium} €</p>
+                    <p><strong>Semi-Annual Premium Equivalent:</strong> {price.semiAnnualPremium} €</p>
+                    <p><strong>Annual Premium Equivalent:</strong> {price.annualPremium} €</p>
+                    <p><strong>Total Semi-Annual Amount:</strong> {price.semiAnnualTotalAmount} €</p>
+                    <p><strong>Total Annual Amount:</strong> {price.annualTotalAmount} €</p>
+                    <p><strong>Discount Percentage:</strong> {price.discountPercentage}%</p>
+                </div>
+            </div>
+        </template>
+        <div class="button-container-final">
+            <lightning-button class="quote-button" label="Get a Quote" onclick={createLead}></lightning-button>
+            <lightning-button class="leave-button" variant="neutral" label="Leave" onclick={leaveSimulation}></lightning-button>
+        </div>
+        <p>{submissionMessage}</p>
     </div>
-    <div class="highlight-text-final">
-        Discount Percentage: {discountPercentage}%
-    </div>
-    <p>Do you want to receive a quote?</p>
-    <div class="button-container-final">
-        <lightning-button class="quote-button" label="Get a Quote" onclick={createLead}></lightning-button>
-        <lightning-button class="leave-button" variant="neutral" label="Leave" onclick={leaveSimulation}></lightning-button>
-    </div>
-    <p>{submissionMessage}</p>
-</div>
+    
 
 </template>
+
+    
