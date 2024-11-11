@@ -56,30 +56,42 @@
         <lightning-flow flow-api-name={flowApiName} flow-input-variables={getFlowInputVariables} onstatuschange={handleFlowStatusChange}></lightning-flow>
     </div>
 
-    <div if:true={showPriceDisplay} class="card-section-final animated-card">
-        <h2 class="header-text">Insurance Price Details</h2>
-        <template for:each={priceResults} for:item="price" for:index="index">
-            <div key={price.ProductId} class="price-result-item">
-                <h3 class="product-name">{price.productName}</h3>
-                <div class="price-info">
-                    <p><strong>Final Premium:</strong> {price.finalPremium} €</p>
-                    <p><strong>Monthly Premium Equivalent:</strong> {price.monthlyPremium} €</p>
-                    <p><strong>Semi-Annual Premium Equivalent:</strong> {price.semiAnnualPremium} €</p>
-                    <p><strong>Annual Premium Equivalent:</strong> {price.annualPremium} €</p>
-                    <p><strong>Total Semi-Annual Amount:</strong> {price.semiAnnualTotalAmount} €</p>
-                    <p><strong>Total Annual Amount:</strong> {price.annualTotalAmount} €</p>
-                    <p><strong>Discount Percentage:</strong> {price.discountPercentage}%</p>
+    <!-- Display Price Options -->
+    <div if:true={showPriceDisplay} class="product-display-container">
+        <h2 class="header-text">Choose Your Payment Option</h2>
+        <div class="product-grid">
+            <template for:each={priceResults} for:item="price" for:index="index">
+                <div key={price.ProductId} class="product-card">
+                    <h3 class="product-name">{price.productName}</h3>
+                    <p class="product-description">{price.productDescription}</p>
+                    <div class="price-options">
+                        <div class="price-option" onclick={handleSelectMonthly} data-index={index}>
+                            <p class="price-label">Monthly Payment</p>
+                            <p class="price-value">{price.monthlyPremium} €</p>
+                        </div>
+                        <div class="price-option" onclick={handleSelectBiannual} data-index={index}>
+                            <p class="price-label">Biannual Payment</p>
+                            <p class="price-value">{price.semiAnnualTotalAmount} €</p>
+                            <p class="price-saving">({price.semiAnnualPremium} €/month)</p>
+                        </div>
+                        <div class="price-option" onclick={handleSelectAnnual} data-index={index}>
+                            <p class="price-label">Annual Payment</p>
+                            <p class="price-value">{price.annualTotalAmount} €</p>
+                            <p class="price-saving">({price.annualPremium} €/month)</p>
+                        </div>
+                    </div>
+                    <div class="product-characteristics">
+                        <ul class="custom-bullet-list">
+                            <template for:each={price.productCharacteristics} for:item="characteristic">
+                                <li key={characteristic}><span>{characteristic}</span></li>
+                            </template>
+                        </ul>
+                    </div>                    
                 </div>
-            </div>
-        </template>
-        <div class="button-container-final">
-            <lightning-button class="quote-button" label="Get a Quote" onclick={createLead}></lightning-button>
-            <lightning-button class="leave-button" variant="neutral" label="Leave" onclick={leaveSimulation}></lightning-button>
+            </template>
         </div>
-        <p>{submissionMessage}</p>
+        <div class="button-container-final">
+            <lightning-button class="leave-button" label="Leave" onclick={leaveSimulation}></lightning-button>
+        </div>
     </div>
-    
-
 </template>
-
-    
