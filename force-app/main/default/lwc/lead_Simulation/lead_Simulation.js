@@ -6,6 +6,8 @@ import { createRecord } from 'lightning/uiRecordApi';
 import LEAD_OBJECT from '@salesforce/schema/Lead';
 import GENDER_FIELD from '@salesforce/schema/Lead.TIS_Gender__c';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
+import TIS_PAYMENT_FREQUENCY_FIELD from '@salesforce/schema/Lead.TIS_Payment_Frequency__c';
+
 
 export default class LeadSimulation extends LightningElement {
     @track name = '';
@@ -16,10 +18,18 @@ export default class LeadSimulation extends LightningElement {
     @track age = '';
     @track productId = '';
     @track priceBookId = '';
+    @track phone = '';
+    @track email = '';
+    @track street = '';
     @track basePremium = 0;
     @track finalPremium = 0;
     @track discountPercentage = 0;
     @track submissionMessage = '';
+    @track isModalOpen = false;
+    @track selectedProduct = '';
+    @track totalPremiumDisplay = '';
+    @track monthlyEquivalentDisplay = '';
+
 
     @track showLicensePlateScreen = true;
     @track showPriceScreen = false;
@@ -33,14 +43,9 @@ export default class LeadSimulation extends LightningElement {
     @track genderOptions = [];
     @track productOptions = [];
     @track priceResults = [];
-    @track paymentOptions = [
-        { label: 'Monthly', value: 'monthly' },
-        { label: 'Biannual', value: 'biannual' },
-        { label: 'Annual', value: 'annual' }
-    ];
+    @track paymentFrequencyOptions = [];
+    
     recordTypeId;
-
-
 
     get randomPrice() {
         // Generate and return a random integer between 21 and 29
@@ -51,10 +56,33 @@ export default class LeadSimulation extends LightningElement {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    validateFields(selector) {
+        const inputs = this.template.querySelectorAll(selector);
+        let isFormValid = true;
+    
+        inputs.forEach(input => {
+            if (!input.reportValidity()) {
+                isFormValid = false;
+            }
+        });
+    
+        return isFormValid;
+    }
+    
+
+    backToLicensePlate() {
+        console.log('Navigating back to the license plate input screen');
+        this.showPriceScreen = false;
+        this.showLicensePlateScreen = true;
+    }
+    
     checkPrice() {
-        console.log('Navigating to price screen');
-        this.showLicensePlateScreen = false;
-        this.showPriceScreen = true;
+        if (this.validateFields('lightning-input[data-id="licensePlate"]')) {
+            this.showLicensePlateScreen = false;
+            this.showPriceScreen = true;
+        } else {
+            console.log('License plate input is invalid. Please correct the input.');
+        }
     }
 
     backToPriceScreen() {
@@ -79,23 +107,55 @@ export default class LeadSimulation extends LightningElement {
     }
 
     nextToDetails() {
-        console.log('Navigating to details form');
-        this.showNameNIFScreen = false;
-        this.showDetailsForm = true;
+        if (this.validateFields('lightning-input[data-id="name"], lightning-input[data-id="phone"], lightning-input[data-id="email"], lightning-combobox[data-id="gender"], lightning-input[data-id="street"]')) {
+            console.log('Personal information is valid. Navigating to details form.');
+            this.showNameNIFScreen = false;
+            this.showDetailsForm = true;
+        } else {
+            console.log('Form is invalid. Please correct the errors before proceeding.');
+        }
     }
 
-    leaveSimulation() {
-        this.showLicensePlateScreen = true;
-        this.showPriceScreen = false;
-        this.showNameNIFScreen = false;
-        this.showDetailsForm = false;
-        this.showPriceDisplay = false;
-        this.renderFlow = false;
+    resetSimulation() {
+    // Reset all input values to initial state
+    this.name = '';
+    this.nif = '';
+    this.licensePlate = '';
+    this.gender = '';
+    this.carValue = '';
+    this.age = '';
+    this.productId = '';
+    this.priceBookId = '';
+    this.basePremium = 0;
+    this.finalPremium = 0;
+    this.discountPercentage = 0;
+    this.submissionMessage = '';
+    this.selectedProduct = '';
+    this.street = '';
+    this.email = '';
+    this.phone = '';
+
+    // Reset all display flags
+    this.showLicensePlateScreen = true;
+    this.showPriceScreen = false;
+    this.showNameNIFScreen = false;
+    this.showDetailsForm = false;
+    this.showPriceDisplay = false;
+    this.isModalOpen = false;
+    this.renderFlow = false;
+    this.priceResults = [];
     }
     
-    
 
-    // Fetch gender options
+    handleInputChange(event) {
+        const field = event.target.dataset.id;
+        this[field] = event.target.value;
+        console.log(`Updated ${field} to`, this[field]);
+    }
+
+  
+
+    // Fetch Lead
     @wire(getObjectInfo, { objectApiName: LEAD_OBJECT })
     wiredObjectInfo({ data, error }) {
         if (data) {
@@ -106,6 +166,7 @@ export default class LeadSimulation extends LightningElement {
         }
     }
 
+    // Fetch Gender
     @wire(getPicklistValues, { recordTypeId: '$recordTypeId', fieldApiName: GENDER_FIELD })
     wiredGenderOptions({ data, error }) {
         if (data) {
@@ -116,7 +177,7 @@ export default class LeadSimulation extends LightningElement {
         }
     }
 
-    // Fetch insurance products
+    // Fetch Products
     @wire(getInsuranceProducts)
     wiredProductOptions({ error, data }) {
         if (data) {
@@ -130,11 +191,30 @@ export default class LeadSimulation extends LightningElement {
         }
     }
 
-    handleInputChange(event) {
-        const field = event.target.dataset.id;
-        this[field] = event.target.value;
-        console.log(`Updated ${field} to`, this[field]);
+    @wire(getPicklistValues, { recordTypeId: '$recordTypeId', fieldApiName: TIS_PAYMENT_FREQUENCY_FIELD })
+    wiredPaymentFrequencyOptions({ data, error }) {
+        if (data) {
+            this.paymentFrequencyOptions = data.values.map(option => ({
+                label: option.label,
+                value: option.value
+            }));
+            console.log('Fetched Payment Frequency Options:', this.paymentFrequencyOptions);
+        } else if (error) {
+            console.error('Error fetching payment frequency picklist values:', error);
+        }
     }
+
+
+    seePrices() {
+        if (this.validateFields('lightning-input[data-id="nif"], lightning-input[data-id="age"], lightning-input[data-id="carValue"]')) {
+            this.showDetailsForm = false;
+            this.processAllProducts();
+        } else {
+            console.log('Form is invalid. Please correct the errors before proceeding.');
+        }
+    }
+    
+
 
     async processAllProducts() {
         console.log('Starting the process for all products');
@@ -144,20 +224,22 @@ export default class LeadSimulation extends LightningElement {
             console.log(`Processing product: ${product.label}`);
             this.productId = product.value;
             this.productName = product.label;
-
+            this.priceBookId = '';
+            this.basePremium = 0;
+    
             this.productDescription = this.getProductDescription(this.productName);
             this.productCharacteristics = this.getProductCharacteristics(this.productName);
-
+    
             try {
                 await this.fetchPriceBookId();
                 await this.fetchBasePremium();
     
                 console.log('Product ID:', this.productId);
-                console.log('Price Book ID:', this.priceBookId);
-    
-                
+                console.log('Price BookD:', this.priceBookId);
+
+
                 this.renderFlow = true;
-                await this.delay(750); // Allow time for rendering
+                await this.waitForFlowCompletion()
     
             } catch (error) {
                 console.error(`Error processing product ${product.label}:`, JSON.stringify(error));
@@ -166,7 +248,51 @@ export default class LeadSimulation extends LightningElement {
     
         console.log('Completed processing all products');
         this.showPriceDisplay = true;
-        
+    }
+    
+    getProductDescription(productName) {
+        console.log('Fetching Description for:', productName);
+        if (productName === 'Third-Party') {
+            return 'Essential protection for your vehicle';
+        } else if (productName === 'Extended Third-Party') {
+            return 'Comprehensive coverage for peace of mind';
+        } else if (productName === 'Comprehensive') {
+            return 'Maximum protection and benefits';
+        } else {
+            return 'Standard insurance plan with essential coverage.';
+        }
+    }
+    
+    getProductCharacteristics(productName) {
+        console.log('Fetching Characteristics for:', productName);
+        if (productName === 'Third-Party') {
+            return [
+                ' Liability Coverage',
+                ' Collision Coverage',
+                ' Personal Injury Protection',
+                ' Roadside Assistance'
+            ];
+        } else if (productName === 'Extended Third-Party') {
+            return [
+                ' Everything in Third-Party',
+                ' Comprehensive Coverage',
+                ' Uninsured Motorist Coverage',
+                ' Personal Accident Protection'
+            ];
+        } else if (productName === 'Comprehensive') {
+            return [
+                ' Everything in Extensive Third-Party',
+                ' Gap Insurance',
+                ' New Car Replacement',
+                ' Windshield Repair/Replacement'
+            ];
+        } else {
+            return [
+                ' Essential coverage with basic protection',
+                ' Meets legal requirements',
+                ' Minimal personal vehicle damage protection'
+            ];
+        }
     }
     
     async fetchPriceBookId() {
@@ -197,17 +323,6 @@ export default class LeadSimulation extends LightningElement {
         }
     }
 
-    seePrices() {
-        
-        this.showDetailsForm = false;
-        this.processAllProducts();
-    
-        console.log('Preparing to pass input variables to flow');
-        console.log('Car Value:', this.carValue);
-        console.log('Age:', this.age);
-        console.log('Base Premium:', this.basePremium);
-    }
-    
     get flowInputVariables() {
         const inputVariables = [
             { name: 'CarValue_CustomerInput', type: 'Number', value: parseInt(this.carValue) || 0 },
@@ -219,8 +334,13 @@ export default class LeadSimulation extends LightningElement {
         console.log('Input Variables for Flow:', JSON.stringify(inputVariables));
         return inputVariables;
     }
-    
-    
+
+    async waitForFlowCompletion() {
+        while (this.renderFlow) {
+            await this.delay(50);
+        }
+    }
+
     
     
     handleFlowStatusChange(event) {
@@ -262,7 +382,9 @@ export default class LeadSimulation extends LightningElement {
                     semiAnnualPremium: semiAnnualPremium,
                     annualPremium: annualPremium,
                     semiAnnualTotalAmount: semiAnnualTotal,
-                    annualTotalAmount: annualTotal
+                    annualTotalAmount: annualTotal,
+                    displayedPremium: monthlyPremium, // Set default to monthly
+                    selectedFrequency: 'Monthly'
                 });
 
                 // Hide the flow after completion
@@ -275,73 +397,88 @@ export default class LeadSimulation extends LightningElement {
         }
     }
         
-        
-
-    handleSelectMonthly(event) {
+    
+    handlePaymentFrequencyChange(event) {
         const selectedIndex = event.target.dataset.index;
+        const selectedFrequency = event.target.value;
         const selectedPlan = this.priceResults[selectedIndex];
-        console.log('Selected Monthly Plan:', selectedPlan);
-        // Implement further actions here (e.g., update UI or save the choice)
-    }
-
-    handleSelectBiannual(event) {
-        const selectedIndex = event.target.dataset.index;
-        const selectedPlan = this.priceResults[selectedIndex];
-        console.log('Selected Biannual Plan:', selectedPlan);
-        // Implement further actions here (e.g., update UI or save the choice)
-    }
-
-    handleSelectAnnual(event) {
-        const selectedIndex = event.target.dataset.index;
-        const selectedPlan = this.priceResults[selectedIndex];
-        console.log('Selected Annual Plan:', selectedPlan);
-        // Implement further actions here (e.g., update UI or save the choice)
-    }
-
-    getProductDescription(productName) {
-        console.log('Fetching Description for:', productName);
-        if (productName === 'Comprehensive') {
-            return 'Comprehensive coverage includes protection against a variety of incidents, providing peace of mind for full vehicle protection.';
-        } else if (productName === 'Third-Party') {
-            return 'Third-party insurance offers basic coverage, protecting against damage you may cause to others.';
-        } else if (productName === 'Extended Third-Party') {
-            return 'Extended third-party coverage includes additional benefits such as theft protection and fire damage.';
-        } else {
-            return 'Standard insurance plan with essential coverage.';
+    
+        if (selectedPlan) {
+            let newPremium;
+    
+            if (selectedFrequency === 'Monthly') {
+                newPremium = selectedPlan.monthlyPremium;
+            } else if (selectedFrequency === 'Semi-Annual') {
+                newPremium = selectedPlan.semiAnnualPremium;
+            } else if (selectedFrequency === 'Annual') {
+                newPremium = selectedPlan.annualPremium;
+            } else {
+                newPremium = selectedPlan.monthlyPremium;
+            }
+    
+            // Update the selected plan with the new premium display
+            this.priceResults[selectedIndex] = {
+                ...selectedPlan,
+                selectedFrequency: selectedFrequency || 'Monthly', // Default to 'monthly' if not provided
+                displayedPremium: `${newPremium}`
+            };
+    
+            console.log(`Updated plan ${selectedIndex} with ${selectedFrequency} premium: ${newPremium}€/month`);
         }
     }
-
-    getProductCharacteristics(productName) {
-        console.log('Fetching Description for:', productName);
-        if (productName === 'Comprehensive') {
-            return [
-                'Covers vehicle damage from natural disasters',
-                'Includes protection against theft and vandalism',
-                'Third-party liability coverage included',
-                'Full peace of mind with extensive protection'
-            ];
-        } else if (productName === 'Third-Party') {
-            return [
-                'Basic coverage for third-party damage',
-                'Affordable option for minimum protection',
-                'Mandatory by law in most regions',
-                'Limited coverage for personal vehicle damage'
-            ];
-        } else if (productName === 'Extended Third-Party') {
-            return [
-                'Additional coverage for theft and fire',
-                'Includes third-party liability',
-                'For those wanting more than basic protection',
-                'Affordable extended protection'
-            ];
+    
+    handleProductClick(event) {
+        if (event.target.tagName === 'SELECT') {
+            // Prevent modal opening if the dropdown is clicked
+            return;
+        }
+    
+        const index = event.currentTarget.dataset.index;
+        const selectedPlan = this.priceResults[index];
+    
+        if (selectedPlan) {
+            this.selectedProduct = selectedPlan.productName;
+            this.selectedFrequency = selectedPlan.selectedFrequency;
+    
+            // Update displayedPremium based on the selected payment frequency
+            if (this.selectedFrequency === 'Monthly') {
+                this.displayedPremium = `${selectedPlan.monthlyPremium}€/month`;
+            } else if (this.selectedFrequency === 'Semi-Annual') {
+                this.displayedPremium = `${selectedPlan.semiAnnualTotalAmount}€ (6 months)`;
+            } else if (this.selectedFrequency === 'Annual') {
+                this.displayedPremium = `${selectedPlan.annualTotalAmount}€ (12 months)`;
+            } else {
+                this.displayedPremium = `${selectedPlan.monthlyPremium}€/month`;
+            }
+    
+            this.productId = this.productOptions.find(product => product.label === selectedPlan.productName)?.value || ''; // We need to get an Id, not a label as in SelectedProduct
+    
+            console.log('Selected Product:', this.selectedProduct);
+            console.log('Selected Payment Frequency:', this.selectedFrequency);
+            console.log('Displayed Premium:', this.displayedPremium);
+    
+            this.isModalOpen = true; // Show the modal
         } else {
-            return [
-                'Essential coverage with basic protection',
-                'Meets legal requirements',
-                'Minimal personal vehicle damage protection'
-            ];
+            console.error('Selected plan not found at index:', index);
         }
     }
+    
+    
+    
+    closeModal() {
+        this.isModalOpen = false; 
+    }
+    
+    stopPropagation(event) {
+        event.stopPropagation(); 
+    }
+    
+    confirmQuote() {
+        // Logic to handle confirming the quote request
+        console.log(`Quote requested for: ${this.selectedProduct}`);
+        this.isModalOpen = false; // Close the modal after confirming
+    }
+    
 
     async createLead() {
         const fields = {
@@ -350,19 +487,38 @@ export default class LeadSimulation extends LightningElement {
             TIS_License_Plate__c: this.licensePlate,
             TIS_Gender__c: this.gender,
             TIS_Age__c: this.age,
-            Product2Id: this.productId,
+            TIS_Insurance_ProductID__c: this.productId,
             TIS_Car_Value__c: this.carValue,
-            TIS_Final_Premium_Amount__c: this.finalPremium,
-            TIS_Discount_Percentage__c: this.discountPercentage
+            Phone: this.phone,
+            Email: this.email, 
+            Street: this.street,
+            TIS_Final_Premium_Amount__c: this.displayedPremium,
+            TIS_Discount_Percentage__c: this.discountPercentage,
+            TIS_Payment_Frequency__c: this.selectedFrequency, 
+            Status: 'Open' // Set the default Lead Status
         };
         const recordInput = { apiName: LEAD_OBJECT.objectApiName, fields };
         try {
             await createRecord(recordInput);
             this.submissionMessage = 'Lead created successfully!';
             console.log('Lead created successfully');
+    
+            // Show the success modal after lead creation
+            this.isModalOpen = false; // Close the existing modal
+            this.isSuccessModalOpen = true; // Open the success modal
         } catch (error) {
-            console.error('Error creating Lead record:', error);
-            this.submissionMessage = 'Por agora é tudo. Obrigado e volte sempre!';
+            console.error('Error creating Lead record:', JSON.stringify(error));
+            if (error.body && error.body.message) {
+                console.error('Detailed error message:', error.body.message);
+            }
+            this.submissionMessage = 'An error occurred while creating the lead. Please try again.';
         }
     }
+    
+
+    handleOkClick() {
+        this.isSuccessModalOpen = false;
+        this.resetSimulation();
+    }
+    
 }

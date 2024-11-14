@@ -3,7 +3,16 @@
     <div if:true={showLicensePlateScreen} class="card-section animated-card">
         <div class="card-title">Do Your Simulation</div>
         <div class="card-subtitle">Please enter your license plate to get started. Your vehicle details will be pre-filled.</div>
-        <lightning-input label="License Plate" data-id="licensePlate" value={licensePlate} onchange={handleInputChange}></lightning-input>
+        <lightning-input 
+            class="no-required-mark" 
+            label="License Plate" 
+            data-id="licensePlate" 
+            value={licensePlate} 
+            onchange={handleInputChange} 
+            required 
+            pattern="^\d{2}-[A-Z]{2}-\d{2}$" 
+            message-when-pattern-mismatch="License plate must follow the format XX-XX-XX (e.g., 70-BT-05).">
+        </lightning-input>
         <div class="button-container">
             <lightning-button class="quote-button" label="Check Price" onclick={checkPrice}></lightning-button>
         </div>
@@ -13,24 +22,67 @@
     <div if:true={showPriceScreen} class="card-section animated-card">
         <div class="icon-text-container">
             <lightning-icon icon-name="utility:info" size="large" alternative-text="Info" class="icon-styled-info"></lightning-icon>
-            <div class="card-info-text">
-                 You can get an insurance product with us starting from {randomPrice}€.
-            </div>
+            <div class="card-info-text">Start with us starting from {randomPrice}€.</div>
         </div>
+        
         <div class="button-container">
-            <lightning-button label="Next" onclick={nextToNameNIF}></lightning-button>
+            <lightning-button label="Back" class="second-screen-buttons" onclick={backToLicensePlate}></lightning-button>
+            <lightning-button label="Next" class="second-screen-buttons" onclick={nextToNameNIF}></lightning-button>
         </div>
     </div>
 
-    <!-- Screen 3a: Name and NIF Input -->
+    <!-- Screen 3a: Name and NIF Input (Personal Identification) -->
     <div if:true={showNameNIFScreen} class="card-section animated-card">
         <div class="icon-text-container">
             <lightning-icon icon-name="utility:people" size="small" alternative-text="People" class="icon-styled"></lightning-icon>
             <h2 class="header-text">Personal Information</h2>
         </div>
-        <lightning-input label="Full Name" data-id="name" value={name} onchange={handleInputChange}></lightning-input>
-        <lightning-combobox label="Sex" data-id="gender" options={genderOptions} value={gender} onchange={handleInputChange}></lightning-combobox>
-        <lightning-input label="NIF" data-id="nif" value={nif} onchange={handleInputChange}></lightning-input>
+        <lightning-input 
+            class="no-required-mark" 
+            label="Full Name" 
+            data-id="name" 
+            value={name} 
+            onchange={handleInputChange} 
+            required>
+        </lightning-input>
+        <lightning-input 
+            class="no-required-mark" 
+            label="Phone" 
+            data-id="phone" 
+            value={phone} 
+            onchange={handleInputChange} 
+            required 
+            pattern="^\d{9}$" 
+            message-when-pattern-mismatch="Phone must have 9 digits.">
+        </lightning-input>
+        <lightning-input 
+            class="no-required-mark" 
+            label="Email" 
+            data-id="email" 
+            value={email} 
+            onchange={handleInputChange} 
+            required 
+            type="email" 
+            message-when-pattern-mismatch="Enter a valid email address.">
+        </lightning-input>
+        <lightning-combobox 
+            class="no-required-mark" 
+            label="Gender" 
+            data-id="gender" 
+            options={genderOptions} 
+            value={gender} 
+            onchange={handleInputChange} 
+            required>
+        </lightning-combobox>
+        <lightning-input 
+            class="no-required-mark" 
+            label="Address" 
+            placeholder="Your Complete Address" 
+            data-id="street" 
+            value={street} 
+            onchange={handleInputChange} 
+            required>
+        </lightning-input>
         <div class="button-container">
             <lightning-button label="Back" onclick={backToPriceScreen}></lightning-button>
             <lightning-button label="Next" onclick={nextToDetails}></lightning-button>
@@ -43,8 +95,34 @@
             <lightning-icon icon-name="utility:settings" size="small" alternative-text="Settings" class="icon-styled"></lightning-icon>
             <h2 class="header-text">Additional Details</h2>
         </div>
-        <lightning-input label="Age" data-id="age" value={age} onchange={handleInputChange}></lightning-input>
-        <lightning-input label="Car Value" data-id="carValue" value={carValue} onchange={handleInputChange}></lightning-input>
+        <lightning-input 
+            class="no-required-mark" 
+            label="NIF" 
+            data-id="nif" 
+            value={nif} 
+            onchange={handleInputChange} 
+            required 
+            pattern="^\d{9}$" 
+            message-when-pattern-mismatch="NIF must have 9 digits.">
+        </lightning-input>
+        <lightning-input 
+            class="no-required-mark" 
+            label="Age" 
+            data-id="age" 
+            value={age} 
+            onchange={handleInputChange} 
+            required 
+            pattern="^(1[89]|[2-9][0-9]?)$" 
+            message-when-pattern-mismatch="Age must be 18 or above.">
+        </lightning-input>
+        <lightning-input 
+            class="no-required-mark" 
+            label="Car Value" 
+            data-id="carValue" 
+            value={carValue} 
+            onchange={handleInputChange} 
+            required>
+        </lightning-input>
         <div class="button-container">
             <lightning-button label="Back" onclick={backToNameNIF}></lightning-button>
             <lightning-button label="See Prices" onclick={seePrices}></lightning-button>
@@ -61,41 +139,67 @@
     </div>
 
     <!-- Display Price Options -->
-    <div if:true={showPriceDisplay} class="product-display-container">
-        <h2 class="header-text">Choose Your Payment Option</h2>
+    <template if:true={showPriceDisplay} class="product-display-container">
+        <h2 class="header-text">Choose Your Plan</h2>
+        <div class="top-left-button">
+            <lightning-button label="Simulate Again" class="Simulate-Button" onclick={resetSimulation}></lightning-button>
+        </div>
         <div class="product-grid">
             <template for:each={priceResults} for:item="price" for:index="index">
-                <div key={price.ProductId} class="product-card">
+                <div key={price.ProductId} class="product-card" data-index={index} onclick={handleProductClick}>
                     <h3 class="product-name">{price.productName}</h3>
                     <p class="product-description">{price.productDescription}</p>
-                    <div class="price-options">
-                        <div class="price-option" onclick={handleSelectMonthly} data-index={index}>
-                            <p class="price-label">Monthly Payment</p>
-                            <p class="price-value">{price.monthlyPremium} €</p>
-                        </div>
-                        <div class="price-option" onclick={handleSelectBiannual} data-index={index}>
-                            <p class="price-label">Biannual Payment</p>
-                            <p class="price-value">{price.semiAnnualTotalAmount} €</p>
-                            <p class="price-saving">({price.semiAnnualPremium} €/month)</p>
-                        </div>
-                        <div class="price-option" onclick={handleSelectAnnual} data-index={index}>
-                            <p class="price-label">Annual Payment</p>
-                            <p class="price-value">{price.annualTotalAmount} €</p>
-                            <p class="price-saving">({price.annualPremium} €/month)</p>
-                        </div>
+                    <div class="price-section">
+                        <p class="price-label">Premium</p>
+                        <p class="price-value">{price.displayedPremium} €/month</p>
                     </div>
-                    <div class="product-characteristics">
-                        <ul class="custom-bullet-list">
-                            <template for:each={price.productCharacteristics} for:item="characteristic">
-                                <li key={characteristic}><span>{characteristic}</span></li>
+                    <div class="form-group">
+                        <label for="paymentFrequency">Payment Frequency</label>
+                        <select id="paymentFrequency" class="dropdown" data-index={index} onchange={handlePaymentFrequencyChange}>
+                            <template for:each={paymentFrequencyOptions} for:item="option" for:index="optIndex">
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="add-ons">
+                        <p class="add-ons-title">Add-ons</p>
+                        <ul class="simple-bullet-list">
+                            <template for:each={price.productCharacteristics} for:item="characteristic" for:index="charIndex">
+                                <li key={characteristic}>{characteristic}</li>
                             </template>
                         </ul>
-                    </div>                    
+                    </div>                                      
                 </div>
             </template>
         </div>
+        <template if:true={isModalOpen}>
+            <div class="modal-backdrop" onclick={closeModal}>
+                <div class="modal" onclick={stopPropagation}>
+                    <h2>Quote Summary</h2>
+                    <p><strong>Product:</strong> {selectedProduct}</p>
+                    <p><strong>Payment Frequency:</strong> {selectedFrequency}</p>
+                    <p><strong>Premium:</strong> {displayedPremium}</p>
+                    <p>Would you like our agent to contact you?</p>
+                    <div class="modal-buttons">
+                        <button onclick={createLead}>Yes, proceed</button>
+                        <button class="cancel-button" onclick={closeModal}>No, cancel</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template if:true={isSuccessModalOpen}>
+            <div class="modal-backdrop" onclick={closeModal}>
+                <div class="modal" onclick={stopPropagation}>
+                    <h2>Thank You!</h2>
+                    <p>Our Agent Will Contact You</p>
+                    <div class="modal-buttons">
+                        <button onclick={handleOkClick}>OK</button>
+                    </div>
+                </div>
+            </div>
+        </template>
         <div class="button-container-final">
-            <lightning-button class="leave-button" label="Leave" onclick={leaveSimulation}></lightning-button>
+            <lightning-button label="Back" class="small-button" onclick={backToDetails}></lightning-button>
         </div>
-    </div>
+    </template>    
 </template>
