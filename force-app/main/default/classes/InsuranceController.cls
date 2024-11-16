@@ -1,6 +1,6 @@
 public with sharing class InsuranceController {
 
-    // Method to get all active insurance products
+
     @AuraEnabled(cacheable=true)
     public static List<Product2> getInsuranceProducts() {
         return [SELECT Id, Name FROM Product2 WHERE isActive = true];

@@ -10,7 +10,7 @@
             value={licensePlate} 
             onchange={handleInputChange} 
             required 
-            pattern="^\d{2}-[A-Z]{2}-\d{2}$" 
+            pattern="^(\d{2}-\d{2}-[A-Z]{2})|([A-Z]{2}-\d{2}-\d{2})|(\d{2}-[A-Z]{2}-\d{2})|([A-Z]{2}-[A-Z]{2}-\d{2})|([A-Z]{2}-\d{2}-[A-Z]{2})|(\d{2}-[A-Z]{2}-[A-Z]{2})$" 
             message-when-pattern-mismatch="License plate must follow the format XX-XX-XX (e.g., 70-BT-05).">
         </lightning-input>
         <div class="button-container">

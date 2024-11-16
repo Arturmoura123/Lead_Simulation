@@ -1,0 +1,13 @@
+<template>
+    <lightning-card title="Claim Details" icon-name="standard:case">
+        <div if:true={claim}>
+            <p><strong>Subject:</strong> {claim.Subject}</p>
+            <p><strong>Reason:</strong> {claim.Reason}</p>
+            <p><strong>Status:</strong> {claim.Status}</p>
+            <p><strong>Created Date:</strong> {claim.formattedDate}</p>
+        </div>
+        <div if:true={error}>
+            <p class="slds-text-color_error">Error loading claim details.</p>
+        </div>
+    </lightning-card>
+</template>

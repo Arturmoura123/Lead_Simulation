@@ -1,0 +1,83 @@
+.claims-header {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    color: #1a237e; /* Deep Indigo for a professional look */
+    font-weight: 700;
+    position: relative;
+}
+
+.header-divider {
+    width: 60px;
+    height: 3px;
+    background-color: #42a5f5; /* Light blue accent */
+    margin: 0.5rem auto 1rem auto;
+    border-radius: 2px;
+}
+
+.claims-section {
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    background-color: #f5f5f5; /* Light grey background */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.3rem;
+    padding: 0.75rem;
+    background-color: #e3f2fd; /* Soft light blue */
+    border-radius: 8px 8px 0 0;
+    color: #1a237e; /* Deep Indigo */
+    font-weight: 600;
+}
+
+
+.arrow-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+.claims-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Uniform column width */
+    margin-top: 0.5rem;
+}
+
+.claims-table th, .claims-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.claims-table th {
+    background-color: #e3f2fd; /* Matching section background */
+    font-weight: bold;
+    color: #1a237e; /* Deep Indigo for consistency */
+    text-transform: uppercase;
+}
+
+.claims-table td {
+    background-color: #ffffff;
+    color: #37474f; /* Neutral dark slate color */
+}
+
+.claims-table tr:hover td {
+    background-color: #f5f5f5; /* Light grey for hover */
+    cursor: pointer;
+}
+
+.claims-table .claim-row td {
+    border-radius: 4px;
+}
+
+.open-table, .closed-table {
+    margin-bottom: 1rem;
+    border-radius: 0 0 8px 8px;
+}
+
+.clickable {
+    user-select: none; /* Prevent text selection */
+}

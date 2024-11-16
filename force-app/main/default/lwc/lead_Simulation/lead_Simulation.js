@@ -25,26 +25,23 @@ export default class LeadSimulation extends LightningElement {
     @track finalPremium = 0;
     @track discountPercentage = 0;
     @track submissionMessage = '';
-    @track isModalOpen = false;
     @track selectedProduct = '';
     @track totalPremiumDisplay = '';
     @track monthlyEquivalentDisplay = '';
-
 
     @track showLicensePlateScreen = true;
     @track showPriceScreen = false;
     @track showNameNIFScreen = false;
     @track showDetailsForm = false;
     @track showPriceDisplay = false;
-    @track renderFlow = false; // Flag to control flow rendering
+    @track renderFlow = false; 
+    @track isModalOpen = false;
     
-
     @api flowApiName = 'fetch_Premium_in_Leads_AutoLaunchFlow';
     @track genderOptions = [];
     @track productOptions = [];
     @track priceResults = [];
     @track paymentFrequencyOptions = [];
-    
     recordTypeId;
 
     get randomPrice() {
@@ -117,7 +114,6 @@ export default class LeadSimulation extends LightningElement {
     }
 
     resetSimulation() {
-    // Reset all input values to initial state
     this.name = '';
     this.nif = '';
     this.licensePlate = '';
@@ -135,7 +131,6 @@ export default class LeadSimulation extends LightningElement {
     this.email = '';
     this.phone = '';
 
-    // Reset all display flags
     this.showLicensePlateScreen = true;
     this.showPriceScreen = false;
     this.showNameNIFScreen = false;
@@ -146,15 +141,13 @@ export default class LeadSimulation extends LightningElement {
     this.priceResults = [];
     }
     
-
     handleInputChange(event) {
         const field = event.target.dataset.id;
         this[field] = event.target.value;
         console.log(`Updated ${field} to`, this[field]);
     }
 
-  
-
+    
     // Fetch Lead
     @wire(getObjectInfo, { objectApiName: LEAD_OBJECT })
     wiredObjectInfo({ data, error }) {
@@ -191,6 +184,7 @@ export default class LeadSimulation extends LightningElement {
         }
     }
 
+    // Fetch Payment Frequency
     @wire(getPicklistValues, { recordTypeId: '$recordTypeId', fieldApiName: TIS_PAYMENT_FREQUENCY_FIELD })
     wiredPaymentFrequencyOptions({ data, error }) {
         if (data) {
@@ -214,7 +208,6 @@ export default class LeadSimulation extends LightningElement {
         }
     }
     
-
 
     async processAllProducts() {
         console.log('Starting the process for all products');
@@ -397,7 +390,7 @@ export default class LeadSimulation extends LightningElement {
         }
     }
         
-    
+    // Change Premium when different Payment Frequency is selected
     handlePaymentFrequencyChange(event) {
         const selectedIndex = event.target.dataset.index;
         const selectedFrequency = event.target.value;
@@ -416,10 +409,10 @@ export default class LeadSimulation extends LightningElement {
                 newPremium = selectedPlan.monthlyPremium;
             }
     
-            // Update the selected plan with the new premium display
+
             this.priceResults[selectedIndex] = {
                 ...selectedPlan,
-                selectedFrequency: selectedFrequency || 'Monthly', // Default to 'monthly' if not provided
+                selectedFrequency: selectedFrequency || 'Monthly', 
                 displayedPremium: `${newPremium}`
             };
     
@@ -427,9 +420,9 @@ export default class LeadSimulation extends LightningElement {
         }
     }
     
+    // Display Product Summary when Customer clicks on a Product
     handleProductClick(event) {
         if (event.target.tagName === 'SELECT') {
-            // Prevent modal opening if the dropdown is clicked
             return;
         }
     
@@ -440,7 +433,6 @@ export default class LeadSimulation extends LightningElement {
             this.selectedProduct = selectedPlan.productName;
             this.selectedFrequency = selectedPlan.selectedFrequency;
     
-            // Update displayedPremium based on the selected payment frequency
             if (this.selectedFrequency === 'Monthly') {
                 this.displayedPremium = `${selectedPlan.monthlyPremium}€/month`;
             } else if (this.selectedFrequency === 'Semi-Annual') {
@@ -474,9 +466,8 @@ export default class LeadSimulation extends LightningElement {
     }
     
     confirmQuote() {
-        // Logic to handle confirming the quote request
         console.log(`Quote requested for: ${this.selectedProduct}`);
-        this.isModalOpen = false; // Close the modal after confirming
+        this.isModalOpen = false; 
     }
     
 
@@ -495,7 +486,7 @@ export default class LeadSimulation extends LightningElement {
             TIS_Final_Premium_Amount__c: this.displayedPremium,
             TIS_Discount_Percentage__c: this.discountPercentage,
             TIS_Payment_Frequency__c: this.selectedFrequency, 
-            Status: 'Open' // Set the default Lead Status
+            Status: 'Open' 
         };
         const recordInput = { apiName: LEAD_OBJECT.objectApiName, fields };
         try {
@@ -503,9 +494,8 @@ export default class LeadSimulation extends LightningElement {
             this.submissionMessage = 'Lead created successfully!';
             console.log('Lead created successfully');
     
-            // Show the success modal after lead creation
-            this.isModalOpen = false; // Close the existing modal
-            this.isSuccessModalOpen = true; // Open the success modal
+            this.isModalOpen = false; 
+            this.isSuccessModalOpen = true; 
         } catch (error) {
             console.error('Error creating Lead record:', JSON.stringify(error));
             if (error.body && error.body.message) {
@@ -515,7 +505,6 @@ export default class LeadSimulation extends LightningElement {
         }
     }
     
-
     handleOkClick() {
         this.isSuccessModalOpen = false;
         this.resetSimulation();
