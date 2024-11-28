@@ -6,10 +6,14 @@ import { createRecord } from 'lightning/uiRecordApi';
 import LEAD_OBJECT from '@salesforce/schema/Lead';
 import GENDER_FIELD from '@salesforce/schema/Lead.TIS_Gender__c';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
-import TIS_PAYMENT_FREQUENCY_FIELD from '@salesforce/schema/Lead.TIS_Payment_Frequency__c';
+import Id from '@salesforce/user/Id';
+import getLoggedInUserDetails from '@salesforce/apex/InsuranceController.getLoggedInUserDetails';
+import getPaymentFrequencies from '@salesforce/apex/InsuranceController.getPaymentFrequencies';
+import getLoggedInUserAccountId from '@salesforce/apex/InsuranceController.getLoggedInUserAccountId';
 
 
 export default class LeadSimulation extends LightningElement {
+    @api userId=Id;
     @track name = '';
     @track nif = '';
     @track licensePlate = '';
@@ -36,6 +40,9 @@ export default class LeadSimulation extends LightningElement {
     @track showPriceDisplay = false;
     @track renderFlow = false; 
     @track isModalOpen = false;
+    @track isLoading = true;
+    @track isFieldDisabled = true;
+    @track isLoggedInUser = false;
     
     @api flowApiName = 'fetch_Premium_in_Leads_AutoLaunchFlow';
     @track genderOptions = [];
@@ -44,6 +51,55 @@ export default class LeadSimulation extends LightningElement {
     @track paymentFrequencyOptions = [];
     recordTypeId;
 
+    connectedCallback() {
+        console.log('connectedCallback invoked');
+        this.fetchUserDetails();
+    }
+
+    fetchUserDetails() {
+        getLoggedInUserDetails()
+            .then(data => {
+                console.log("This is the json" + JSON.stringify(data));
+                if (data) {
+                    this.isLoggedInUser = true; // User is logged in
+                    this.isFieldDisabled = true; // Disable fields
+                    this.name = data.Name || '';
+                    this.phone = data.Phone || '';
+                    this.email = data.Email || '';
+                    this.gender = data.Gender || '';
+                    this.street = data.Street || '';
+                    this.age = data.Age || '';
+                    this.nif = data.NIF || '';
+                    console.log("Logged-in user details loaded. Skipping gender fetch.");
+                } else {
+                    this.isLoggedInUser = false; // User is not logged in
+                    this.isFieldDisabled = false; // Enable fields
+                    
+                    // Fetch gender options only if the user is not logged in
+                    console.log("No logged-in user detected. Fetching gender options...");
+                    this.fetchGenderOptions();
+                }
+                this.isLoading = false;
+            })
+            .catch(error => {
+                console.error('Error fetching user details:', error);
+                this.isLoggedInUser = false; // Assume not logged in on error
+                this.isFieldDisabled = false; // Enable fields
+                this.isLoading = false;
+            });
+        
+        getLoggedInUserAccountId()
+            .then(accountId => {
+                this.accountId = accountId || null;
+                console.log("Fetched AccountId:", this.accountId);
+            })
+            .catch(error => {
+                console.error('Error fetching AccountId:', error);
+                this.accountId = null;
+            });
+    }
+    
+    
     get randomPrice() {
         // Generate and return a random integer between 21 and 29
         return Math.floor(Math.random() * (29 - 21 + 1)) + 21;
@@ -170,6 +226,7 @@ export default class LeadSimulation extends LightningElement {
         }
     }
 
+
     // Fetch Products
     @wire(getInsuranceProducts)
     wiredProductOptions({ error, data }) {
@@ -184,17 +241,16 @@ export default class LeadSimulation extends LightningElement {
         }
     }
 
-    // Fetch Payment Frequency
-    @wire(getPicklistValues, { recordTypeId: '$recordTypeId', fieldApiName: TIS_PAYMENT_FREQUENCY_FIELD })
-    wiredPaymentFrequencyOptions({ data, error }) {
+    @wire(getPaymentFrequencies)
+    wiredPaymentFrequencies({ data, error }) {
         if (data) {
-            this.paymentFrequencyOptions = data.values.map(option => ({
-                label: option.label,
-                value: option.value
+            this.paymentFrequencyOptions = data.map(option => ({
+                label: option.Frequency_Name__c,
+                value: option.Frequency_Value__c
             }));
-            console.log('Fetched Payment Frequency Options:', this.paymentFrequencyOptions);
+            console.log('Fetched Payment Frequency Options from Metadata:', JSON.stringify(this.paymentFrequencyOptions));
         } else if (error) {
-            console.error('Error fetching payment frequency picklist values:', error);
+            console.error('Error fetching payment frequencies:', error);
         }
     }
 
@@ -376,7 +432,7 @@ export default class LeadSimulation extends LightningElement {
                     annualPremium: annualPremium,
                     semiAnnualTotalAmount: semiAnnualTotal,
                     annualTotalAmount: annualTotal,
-                    displayedPremium: monthlyPremium, // Set default to monthly
+                    displayedPremium: annualPremium, // Set default to monthly
                     selectedFrequency: 'Monthly'
                 });
 
@@ -401,7 +457,7 @@ export default class LeadSimulation extends LightningElement {
     
             if (selectedFrequency === 'Monthly') {
                 newPremium = selectedPlan.monthlyPremium;
-            } else if (selectedFrequency === 'Semi-Annual') {
+            } else if (selectedFrequency === 'Semi_Annual') {
                 newPremium = selectedPlan.semiAnnualPremium;
             } else if (selectedFrequency === 'Annual') {
                 newPremium = selectedPlan.annualPremium;
@@ -412,7 +468,7 @@ export default class LeadSimulation extends LightningElement {
 
             this.priceResults[selectedIndex] = {
                 ...selectedPlan,
-                selectedFrequency: selectedFrequency || 'Monthly', 
+                selectedFrequency: selectedFrequency || 'Annual', 
                 displayedPremium: `${newPremium}`
             };
     
@@ -435,7 +491,7 @@ export default class LeadSimulation extends LightningElement {
     
             if (this.selectedFrequency === 'Monthly') {
                 this.displayedPremium = `${selectedPlan.monthlyPremium}€/month`;
-            } else if (this.selectedFrequency === 'Semi-Annual') {
+            } else if (this.selectedFrequency === 'Semi_Annual') {
                 this.displayedPremium = `${selectedPlan.semiAnnualTotalAmount}€ (6 months)`;
             } else if (this.selectedFrequency === 'Annual') {
                 this.displayedPremium = `${selectedPlan.annualTotalAmount}€ (12 months)`;
@@ -471,45 +527,101 @@ export default class LeadSimulation extends LightningElement {
     }
     
 
-    async createLead() {
-        const fields = {
-            LastName: this.name,
-            TIS_NIF__c: this.nif,
-            TIS_License_Plate__c: this.licensePlate,
-            TIS_Gender__c: this.gender,
-            TIS_Age__c: this.age,
-            TIS_Insurance_ProductID__c: this.productId,
-            TIS_Car_Value__c: this.carValue,
-            Phone: this.phone,
-            Email: this.email, 
-            Street: this.street,
-            TIS_Final_Premium_Amount__c: this.displayedPremium,
-            TIS_Discount_Percentage__c: this.discountPercentage,
-            TIS_Payment_Frequency__c: this.selectedFrequency, 
-            Status: 'Open' 
-        };
-        const recordInput = { apiName: LEAD_OBJECT.objectApiName, fields };
-        try {
-            await createRecord(recordInput);
-            this.submissionMessage = 'Lead created successfully!';
-            console.log('Lead created successfully');
+    async createRecordBasedOnUser() {
+        
+        if (this.isLoggedInUser) {
+            // Create an Opportunity for logged-in users
+            const fields = {
+                Name: this.name, // Use the product name as the Opportunity name
+                CloseDate: new Date().toISOString().split('T')[0], // Set close date to today
+                StageName: 'Prospecting', // Default stage for the Opportunity
+                AccountId: this.accountId, // Use logged-in user's Account ID
+                TIS_Insurance_ProductID__c: this.productId, // Custom field for Product ID
+                TIS_Final_Premium_Amount__c: this.displayedPremium,
+                TIS_Payment_Frequency_c__c: this.selectedFrequency,
+                TIS_Car_Value__c: this.carValue,
+                TIS__c: this.licensePlate,
+                TIS_Email__c: this.email
+            };
+            const recordInput = { apiName: 'Opportunity', fields };
     
-            this.isModalOpen = false; 
-            this.isSuccessModalOpen = true; 
-        } catch (error) {
-            // Check for the specific guest user access error
-            if (error.body && error.body.statusCode === 404 && error.body.message.includes('The requested resource does not exist')) {
-                console.log('Known guest user access issue detected, treating it as a successful submission.');
-                this.submissionMessage = 'Lead created successfully!';
+            try {
+                await createRecord(recordInput);
+                this.submissionMessage = 'Opportunity created successfully!';
+                console.log('Opportunity created successfully');
+    
                 this.isModalOpen = false;
                 this.isSuccessModalOpen = true;
-            } else {
-                // Handle actual errors
-                console.error('Error creating Lead record:', JSON.stringify(error));
-                this.submissionMessage = 'An error occurred while creating the lead. Please try again.';
-                this.isModalOpen = false; 
-            }}
+            } catch (error) {
+                // Check for the specific guest user access error
+                if (
+                    error.body &&
+                    error.body.statusCode === 404 &&
+                    error.body.message.includes('The requested resource does not exist')
+                ) {
+                    console.log(
+                        'Known guest user access issue detected, treating it as a successful submission.'
+                    );
+                    this.submissionMessage = 'Opportunity created successfully!';
+                    this.isModalOpen = false;
+                    this.isSuccessModalOpen = true;
+                } else {
+                    // Handle actual errors
+                    console.error('Error creating Opportunity record:', JSON.stringify(error));
+                    this.submissionMessage = 'An error occurred while creating the Opportunity. Please try again.';
+                    this.isModalOpen = false;
+                }
+            }
+        } else {
+            // Create a Lead for guest users
+            const fields = {
+                LastName: this.name,
+                TIS_NIF__c: this.nif,
+                TIS_License_Plate__c: this.licensePlate,
+                TIS_Gender__c: this.gender,
+                TIS_Age__c: this.age,
+                TIS_Insurance_ProductID__c: this.productId,
+                TIS_Car_Value__c: this.carValue,
+                Phone: this.phone,
+                Email: this.email,
+                Street: this.street,
+                TIS_Final_Premium_Amount__c: this.displayedPremium,
+                TIS_Discount_Percentage__c: this.discountPercentage,
+                TIS_Payment_Frequency__c: this.selectedFrequency,
+                Status: 'Open'
+            };
+            const recordInput = { apiName: LEAD_OBJECT.objectApiName, fields };
+    
+            try {
+                await createRecord(recordInput);
+                this.submissionMessage = 'Lead created successfully!';
+                console.log('Lead created successfully');
+    
+                this.isModalOpen = false;
+                this.isSuccessModalOpen = true;
+            } catch (error) {
+                // Check for the specific guest user access error
+                if (
+                    error.body &&
+                    error.body.statusCode === 404 &&
+                    error.body.message.includes('The requested resource does not exist')
+                ) {
+                    console.log(
+                        'Known guest user access issue detected, treating it as a successful submission.'
+                    );
+                    this.submissionMessage = 'Lead created successfully!';
+                    this.isModalOpen = false;
+                    this.isSuccessModalOpen = true;
+                } else {
+                    // Handle actual errors
+                    console.error('Error creating Lead record:', JSON.stringify(error));
+                    this.submissionMessage = 'An error occurred while creating the Lead. Please try again.';
+                    this.isModalOpen = false;
+                }
+            }
+        }
     }
+    
     
     handleOkClick() {
         this.isSuccessModalOpen = false;

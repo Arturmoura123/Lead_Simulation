@@ -1,35 +1,60 @@
 <template>
-    <!-- Show spinner while waiting for data -->
-    <template if:true={recordId}>
-        <template if:true={claim}>
-            <div class="slds-box slds-theme_default">
-                <h1 class="slds-text-heading_medium">Claim Details</h1>
-                <p><strong>Reason:</strong> {claim.Reason}</p>
-                <p><strong>Subject:</strong> {claim.Subject}</p>
-                <p><strong>Status:</strong> {claim.Status}</p>
-                <p><strong>Created Date:</strong> {claim.CreatedDate}</p>
-                <template if:true={claim.ClosedDate}>
-                    <p><strong>Closed Date:</strong> {claim.ClosedDate}</p>
-                </template>
-                <p><strong>Account Name:</strong> {accountName}</p>
-                <p><strong>Contact Name:</strong> {contactName}</p>
-                <p><strong>Owner Name:</strong> {ownerName}</p>
-                <p><strong>Priority:</strong> {claim.Priority}</p>
-                <p><strong>Description:</strong> {claim.Description}</p>
-                <p><strong>Policy:</strong> {policyName}</p>
-            </div>
-        </template>
-
-        <!-- Show error message -->
-        <template if:true={error}>
-            <div class="slds-box slds-theme_error">
-                <p><strong>Error:</strong> {errorMessage}</p>
-            </div>
-        </template>
+    <template if:true={isLoading}>
+        <div class="loading-container">
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </div>
     </template>
 
-    <!-- Display a message when no claim is loaded -->
-    <template if:false={recordId}>
-        <p>No record ID found. Please place this component on a record page.</p>
+    <template if:false={isLoading}>
+        <template if:true={recordId}>
+            <template if:true={claim}>
+                <div class="slds-card">
+                    <header class="slds-card__header">
+                        <h1 class="slds-text-heading_large slds-m-bottom_medium">Claim Details</h1>
+                    </header>
+                    <div class="slds-card__body">
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-col slds-size_1-of-2">
+                                <p><strong>Reason:</strong> {claim.Reason}</p>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <p><strong>Subject:</strong> {claim.Subject}</p>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <p><strong>Status:</strong> {claim.Status}</p>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <p><strong>Created Date:</strong> {formattedCreatedDate}</p>
+                            </div>
+                            <template if:true={claim.ClosedDate}>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <p><strong>Closed Date:</strong> {formattedClosedDate}</p>
+                                </div>
+                            </template>
+                            <div class="slds-col slds-size_1-of-2">
+                                <p><strong>Policy:</strong> {policyName}</p>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <p><strong>Description:</strong> {claim.Description}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Button is part of the same conditional block -->
+                <div class="button-container">
+                    <lightning-button label="Back" class="custom-button" onclick={handleBackToClaims}></lightning-button>
+                </div>
+            </template>
+
+            <template if:true={error}>
+                <div class="slds-box slds-theme_error">
+                    <p><strong>Error:</strong> {errorMessage}</p>
+                </div>
+            </template>
+        </template>
+
+        <template if:false={recordId}>
+            <p class="slds-text-title">No record ID found. Please place this component on a record page.</p>
+        </template>
     </template>
 </template>

@@ -6,6 +6,7 @@ public with sharing class InsuranceController {
         return [SELECT Id, Name FROM Product2 WHERE isActive = true];
     }
 
+
     @AuraEnabled(cacheable=true)
     public static String getActivePriceBookIdForProduct(String productId) {
         System.debug('Artur Fetching Price Book ID for Product ID: ' + productId);
@@ -40,5 +41,45 @@ public with sharing class InsuranceController {
             throw new AuraHandledException('Error fetching base premium.');
         }
     }
+    
+    @AuraEnabled(cacheable=true)
+    public static Map<String, String> getLoggedInUserDetails() {
+        User currentUser = [SELECT Id, AccountId FROM User WHERE Id = :UserInfo.getUserId()];
+        
+        if (currentUser.AccountId != null) {
+            Account account = [
+                SELECT Name, Phone, PersonEmail, Address__c, Gender__c, Age__c, TIS_NIF__c
+                FROM Account
+                WHERE Id = :currentUser.AccountId
+                LIMIT 1
+            ];
+            
+            return new Map<String, String>{
+                'Name' => account.Name,
+                'Phone' => account.Phone,
+                'Email' => account.PersonEmail,
+                'Street' => account.Address__c,
+                'Gender' => account.Gender__c,
+                'Age' => String.valueOf(account.Age__c),
+                'NIF' => account.TIS_NIF__c
+            };
+        }
+        
+        return null;
+    } 
+
+    @AuraEnabled(cacheable=true)
+    public static List<PaymentFrequency__mdt> getPaymentFrequencies() {
+        return [SELECT DeveloperName, Frequency_Name__c, Frequency_Value__c 
+                FROM PaymentFrequency__mdt];
+    }
+
+
+        @AuraEnabled(cacheable=true)
+    public static String getLoggedInUserAccountId() {
+        User currentUser = [SELECT AccountId FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+        return currentUser.AccountId;
+    }
+
     
 }

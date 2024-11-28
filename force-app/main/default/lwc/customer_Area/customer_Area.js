@@ -17,12 +17,12 @@ export default class CustomerArea extends NavigationMixin(LightningElement) {
             this.openClaims = data.Open.map(claim => ({
                 ...claim,
                 Reason: claim.Reason ? claim.Reason : 'No Reason Specified',
-                formattedDate: new Date(claim.CreatedDate).toLocaleString()
+                formattedDate: new Date(claim.CreatedDate).toLocaleDateString() // Only the date
             }));
             this.closedClaims = data.Closed.map(claim => ({
                 ...claim,
                 Reason: claim.Reason ? claim.Reason : 'No Reason Specified',
-                formattedDate: new Date(claim.ClosedDate).toLocaleString()
+                formattedDate: new Date(claim.ClosedDate).toLocaleDateString() // Only the date
             }));
             console.log('Processed Open Claims:', this.openClaims);
             console.log('Processed Closed Claims:', this.closedClaims);
@@ -30,6 +30,7 @@ export default class CustomerArea extends NavigationMixin(LightningElement) {
             console.error('Error fetching data:', error);
         }
     }
+    
 
     handleRowClick(event) {
         const recordId = event.currentTarget.dataset.id;

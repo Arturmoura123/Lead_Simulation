@@ -34,4 +34,19 @@ public with sharing class ClaimController {
             throw new AuraHandledException('Failed to retrieve case details: ' + e.getMessage());
         }
     } 
+    
+
+    @AuraEnabled(cacheable=true)
+    public static Account getUserDetails(String userId) {
+        User user = [SELECT ContactId FROM User WHERE Id = :userId LIMIT 1];
+
+        if (user.ContactId == null) {
+            throw new AuraHandledException('No Contact is associated with the logged-in user.');
+        }
+
+        Account personAccount = [SELECT Id, Name, Phone, PersonEmail, PersonContactId
+                                 FROM Account
+                                 WHERE PersonContactId = :user.ContactId LIMIT 1];
+        return personAccount;
+    }
 }

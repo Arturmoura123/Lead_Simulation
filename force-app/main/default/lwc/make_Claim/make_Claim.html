@@ -1,0 +1,95 @@
+<template>
+    <div class="claim-form">
+        <h1>Submit a Claim</h1>
+
+        <lightning-input
+            label="License Plate"
+            type="text"
+            name="licensePlate"
+            placeholder="Enter the car's license plate"
+            data-id="licensePlate" 
+            onchange={handleInputChange}
+            required 
+            pattern="^(\d{2}-\d{2}-[A-Z]{2})|([A-Z]{2}-\d{2}-\d{2})|(\d{2}-[A-Z]{2}-\d{2})|([A-Z]{2}-[A-Z]{2}-\d{2})|([A-Z]{2}-\d{2}-[A-Z]{2})|(\d{2}-[A-Z]{2}-[A-Z]{2})$" 
+            message-when-pattern-mismatch="License plate must follow the format XX-XX-XX (e.g., 70-BT-05)."
+        ></lightning-input>
+        
+        <lightning-combobox
+            label="Case Reason"
+            name="caseReason"
+            placeholder="Select a reason"
+            options={caseReasonOptions}
+            onchange={handleInputChange}
+            required
+        ></lightning-combobox>
+        
+        <lightning-input
+            label="Subject"
+            type="text"
+            name="caseSubject"
+            placeholder="Enter the subject"
+            onchange={handleInputChange}
+            required
+        ></lightning-input>
+        
+        <lightning-textarea
+            label="Description"
+            name="caseDescription"
+            placeholder="Describe your issue"
+            required
+            onchange={handleInputChange}
+        ></lightning-textarea>
+
+        <lightning-file-upload
+            label="Attach Files"
+            name="fileUpload"
+            record-id={recordId}
+            multiple
+            accept=".pdf,.png,.jpg"
+            onuploadfinished={handleFileUpload}>
+        </lightning-file-upload>
+
+
+        <template if:true={uploadedFiles}>
+            <ul>
+                <template for:each={uploadedFiles} for:item="file">
+                    <li key={file.documentId} class="file-item">
+                        <span>{file.name}</span>
+                        <lightning-button-icon
+                            icon-name="utility:delete"
+                            alternative-text="Delete File"
+                            onclick={deleteFile}
+                            data-id={file.documentId}
+                            class="delete-button"
+                        ></lightning-button-icon>
+                    </li>
+                </template>
+            </ul>
+        </template>
+        
+
+        <div class="submit-button-container">
+            <lightning-button
+                label="Submit Claim"
+                variant="brand"
+                onclick={handleSubmit}
+            ></lightning-button>
+        </div>
+
+        <template if:true={showModal}>
+            <div class="custom-modal">
+                <div class="custom-modal-content">
+                    <h2 class="modal-header">Claim Submitted</h2>
+                    <p class="modal-body">
+                        Your claim has been submitted successfully. Go to your Client Area to see them.
+                    </p>
+                    <div class="modal-actions">
+                        <lightning-button label="Go to My Area" variant="brand" onclick={navigateToMyArea}></lightning-button>
+                        <lightning-button label="Got it" variant="neutral" onclick={closeModal}></lightning-button>
+                    </div>
+                </div>
+                <div class="modal-backdrop"></div>
+            </div>
+        </template>
+    </div>
+</template>

@@ -1,0 +1,105 @@
+.slds-card {
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    padding: 25px;
+    background-color: #ffffff;
+    max-width: 800px;
+    border: 1px solid #ccc;
+}
+
+.slds-card__header {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 3px solid #0070d2;
+    text-transform: uppercase;
+}
+
+.slds-card__body {
+    font-size: 1.1rem;
+    color: #333;
+}
+
+strong {
+    color: #00509e;
+    font-weight: bold;
+}
+
+p {
+    margin: 5px 0;
+}
+
+.slds-box.slds-theme_error {
+    background-color: #ffecec;
+    border-left: 5px solid #ff5c5c;
+    color: #d90000;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.slds-box {
+    background: #fafafa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.claim-card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.slds-card__header h1 {
+    color: #005fb2; /* Change to match your theme */
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Space between buttons if multiple */
+    margin-top: 20px; /* Add spacing from other elements */
+}
+
+.custom-button lightning-button {
+    display: inline-block;
+}
+
+.custom-button button {
+    background-color: #005fb2; /* Your custom button color */
+    color: #ffffff; /* White text */
+    border: none; /* Remove border */
+    border-radius: 8px; /* Slightly rounded corners */
+    padding: 10px 20px; /* Add some padding for size */
+    font-size: 1rem; /* Text size */
+    cursor: pointer; /* Pointer cursor on hover */
+    text-transform: uppercase; /* Make text uppercase */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add subtle shadow */
+    transition: background-color 0.3s ease; /* Smooth hover transition */
+}
+
+.custom-button button:hover {
+    background-color: #004080; /* Darker color on hover */
+}
+
+.custom-button button:active {
+    background-color: #003366; /* Even darker color on click */
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+}

@@ -13,7 +13,7 @@
             pattern="^(\d{2}-\d{2}-[A-Z]{2})|([A-Z]{2}-\d{2}-\d{2})|(\d{2}-[A-Z]{2}-\d{2})|([A-Z]{2}-[A-Z]{2}-\d{2})|([A-Z]{2}-\d{2}-[A-Z]{2})|(\d{2}-[A-Z]{2}-[A-Z]{2})$" 
             message-when-pattern-mismatch="License plate must follow the format XX-XX-XX (e.g., 70-BT-05).">
         </lightning-input>
-        <div class="button-container">
+        <div class="check-price-container">
             <lightning-button class="quote-button" label="Check Price" onclick={checkPrice}></lightning-button>
         </div>
     </div>
@@ -43,6 +43,7 @@
             data-id="name" 
             value={name} 
             onchange={handleInputChange} 
+            disabled={isLoggedInUser}
             required>
         </lightning-input>
         <lightning-input 
@@ -52,6 +53,7 @@
             value={phone} 
             onchange={handleInputChange} 
             required 
+            disabled={isLoggedInUser}
             pattern="^\d{9}$" 
             message-when-pattern-mismatch="Phone must have 9 digits.">
         </lightning-input>
@@ -60,27 +62,31 @@
             label="Email" 
             data-id="email" 
             value={email} 
+            disabled={isLoggedInUser}
             onchange={handleInputChange} 
             required 
             type="email" 
             message-when-pattern-mismatch="Enter a valid email address.">
         </lightning-input>
-        <lightning-combobox 
-            class="no-required-mark" 
-            label="Gender" 
-            data-id="gender" 
-            options={genderOptions} 
-            value={gender} 
-            onchange={handleInputChange} 
-            required>
-        </lightning-combobox>
+        <template if:false={isLoggedInUser}>
+            <lightning-combobox 
+                class="no-required-mark" 
+                label="Gender" 
+                data-id="gender" 
+                options={genderOptions} 
+                value={gender} 
+                onchange={handleInputChange} 
+                required>
+            </lightning-combobox>
+        </template>
         <lightning-input 
             class="no-required-mark" 
             label="Address" 
             placeholder="Your Complete Address" 
             data-id="street" 
             value={street} 
-            onchange={handleInputChange} 
+            onchange={handleInputChange}
+            disabled={isLoggedInUser}
             required>
         </lightning-input>
         <div class="button-container">
@@ -101,7 +107,8 @@
             data-id="nif" 
             value={nif} 
             onchange={handleInputChange} 
-            required 
+            required
+            disabled={isLoggedInUser}
             pattern="^\d{9}$" 
             message-when-pattern-mismatch="NIF must have 9 digits.">
         </lightning-input>
@@ -111,7 +118,8 @@
             data-id="age" 
             value={age} 
             onchange={handleInputChange} 
-            required 
+            required
+            disabled={isLoggedInUser}
             pattern="^(1[89]|[2-9][0-9]?)$" 
             message-when-pattern-mismatch="Age must be 18 or above.">
         </lightning-input>
@@ -181,8 +189,8 @@
                     <p><strong>Premium:</strong> {displayedPremium}</p>
                     <p>Would you like our agent to contact you?</p>
                     <div class="modal-buttons">
-                        <button onclick={createLead}>Yes, proceed</button>
                         <button class="cancel-button" onclick={closeModal}>No, cancel</button>
+                        <button onclick={createRecordBasedOnUser}>Yes, proceed</button>
                     </div>
                 </div>
             </div>

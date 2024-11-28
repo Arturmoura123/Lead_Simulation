@@ -1,11 +1,13 @@
-import { LightningElement, api, wire } from 'lwc';
+import { LightningElement, api, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getClaimDetails from '@salesforce/apex/ClaimController.getClaimDetails';
 
-export default class ClaimDetail extends LightningElement {
+
+export default class ClaimDetail extends NavigationMixin(LightningElement) {
     @api recordId;
     claim;
     error;
+    @track isLoading = true;
 
     connectedCallback() {
         if (!this.recordId) {
@@ -28,18 +30,30 @@ export default class ClaimDetail extends LightningElement {
             this.error = error;
             this.claim = undefined;
         }
+        this.isLoading = false;
+    }
+    
+
+    formatDateTime(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const options = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false // Use 24-hour format
+        };
+        return date.toLocaleString('en-US', options);
     }
 
-    get accountName() {
-        return this.claim && this.claim.Account ? this.claim.Account.Name : 'N/A';
+    get formattedCreatedDate() {
+        return this.formatDateTime(this.claim?.CreatedDate);
     }
 
-    get contactName() {
-        return this.claim && this.claim.Contact ? this.claim.Contact.Name : 'N/A';
-    }
-
-    get ownerName() {
-        return this.claim && this.claim.Owner ? this.claim.Owner.Name : 'N/A';
+    get formattedClosedDate() {
+        return this.formatDateTime(this.claim?.ClosedDate);
     }
 
     get policyName() {
@@ -49,4 +63,14 @@ export default class ClaimDetail extends LightningElement {
     get errorMessage() {
         return this.error && this.error.body ? this.error.body.message : 'Unknown error';
     }
+
+    handleBackToClaims() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__webPage',
+            attributes: {
+                url: '/my-area' // The URL path for your "My Area" page
+            }
+        });
+    }
+    
 }

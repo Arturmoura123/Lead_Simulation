@@ -1,10 +1,17 @@
+.claims-container {
+    width: 90%; /* Use 90% of the screen width for smaller screens */
+
+    margin: 0 auto; /* Center the container horizontally */
+    padding: 1rem; /* Add some padding for spacing */
+}
+
+
 .claims-header {
     text-align: center;
     margin-bottom: 1rem;
     font-size: 2rem;
     color: #1a237e; /* Deep Indigo for a professional look */
     font-weight: 700;
-    position: relative;
 }
 
 .header-divider {
@@ -33,7 +40,6 @@
     color: #1a237e; /* Deep Indigo */
     font-weight: 600;
 }
-
 
 .arrow-icon {
     transition: transform 0.2s ease-in-out;

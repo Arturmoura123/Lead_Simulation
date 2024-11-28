@@ -1,51 +1,24 @@
 <template>
-    <div class="claims-header">
-        <h2>My Claims</h2>
-        <hr class="header-divider" />
-    </div>
-    <div class="claims-section open-claims">
-        <div class="section-header">
-            <span>Open Claims</span>
+    <div class="claims-container">
+        <div class="claims-header">
+            <h2>My Claims</h2>
+            <hr class="header-divider" />
         </div>
-        <table class="claims-table">
-            <thead>
-                <tr>
-                    <th>Subject</th>
-                    <th>Case Reason</th>
-                    <th>Status</th>
-                    <th>Created Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template for:each={openClaims} for:item="claim">
-                    <tr key={claim.Id} class="claim-row" data-id={claim.Id} onclick={handleRowClick}>
-                        <td>{claim.Subject}</td>
-                        <td>{claim.Reason}</td>
-                        <td>{claim.Status}</td>
-                        <td>{claim.formattedDate}</td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="claims-section closed-claims clickable" onclick={toggleClosedClaims}>
-        <div class="section-header">
-            <span>Closed Claims</span>
-            <lightning-icon icon-name={closedClaimsIcon} size="small" class="arrow-icon"></lightning-icon>
-        </div>
-        <template if:true={showClosedClaims}>
+        <div class="claims-section open-claims">
+            <div class="section-header">
+                <span>Open Claims</span>
+            </div>
             <table class="claims-table">
                 <thead>
                     <tr>
                         <th>Subject</th>
                         <th>Case Reason</th>
                         <th>Status</th>
-                        <th>Closed Date</th>
+                        <th>Created Date</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <template for:each={closedClaims} for:item="claim">
+                    <template for:each={openClaims} for:item="claim">
                         <tr key={claim.Id} class="claim-row" data-id={claim.Id} onclick={handleRowClick}>
                             <td>{claim.Subject}</td>
                             <td>{claim.Reason}</td>
@@ -55,6 +28,35 @@
                     </template>
                 </tbody>
             </table>
-        </template>
+        </div>
+
+        <div class="claims-section closed-claims clickable" onclick={toggleClosedClaims}>
+            <div class="section-header">
+                <span>Closed Claims</span>
+                <lightning-icon icon-name={closedClaimsIcon} size="small" class="arrow-icon"></lightning-icon>
+            </div>
+            <template if:true={showClosedClaims}>
+                <table class="claims-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Case Reason</th>
+                            <th>Status</th>
+                            <th>Closed Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={closedClaims} for:item="claim">
+                            <tr key={claim.Id} class="claim-row" data-id={claim.Id} onclick={handleRowClick}>
+                                <td>{claim.Subject}</td>
+                                <td>{claim.Reason}</td>
+                                <td>{claim.Status}</td>
+                                <td>{claim.formattedDate}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+        </div>
     </div>
 </template>
