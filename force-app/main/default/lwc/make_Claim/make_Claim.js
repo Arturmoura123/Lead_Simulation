@@ -165,7 +165,7 @@ export default class MakeClaim extends NavigationMixin(LightningElement) {
         this[NavigationMixin.Navigate]({
             type: 'standard__webPage',
             attributes: {
-                url: '/my-area' // Replace with the actual URL for the "My Area" page
+                url: '/my-claims' // Replace with the actual URL for the "My Area" page
             }
         });
     }

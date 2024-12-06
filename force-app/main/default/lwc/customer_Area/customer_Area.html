@@ -1,5 +1,12 @@
 <template>
     <div class="claims-container">
+        <div class="navigation">
+            <lightning-button 
+                label="Back to My Area" 
+                class="back-button" 
+                onclick={navigateToMyArea}>
+            </lightning-button>
+        </div>
         <div class="claims-header">
             <h2>My Claims</h2>
             <hr class="header-divider" />
@@ -29,7 +36,6 @@
                 </tbody>
             </table>
         </div>
-
         <div class="claims-section closed-claims clickable" onclick={toggleClosedClaims}>
             <div class="section-header">
                 <span>Closed Claims</span>

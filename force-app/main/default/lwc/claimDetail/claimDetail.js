@@ -68,7 +68,7 @@ export default class ClaimDetail extends NavigationMixin(LightningElement) {
         this[NavigationMixin.Navigate]({
             type: 'standard__webPage',
             attributes: {
-                url: '/my-area' // The URL path for your "My Area" page
+                url: '/my-claims' // The URL path for your "My Area" page
             }
         });
     }

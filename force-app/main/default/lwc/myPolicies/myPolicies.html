@@ -1,0 +1,32 @@
+<template>
+    <div class="policies-container">
+        <div class="navigation">
+            <lightning-button 
+                label="Back to My Area" 
+                class="back-button" 
+                onclick={navigateToMyArea}>
+            </lightning-button>
+        </div>
+        <div class="policies-header">
+            <h2>My Policies</h2>
+            <hr class="header-divider" />
+        </div>
+        <template if:true={policies}>
+            <div class="policies-list">
+                <template for:each={policies} for:item="policy">
+                    <div key={policy.Id} class="policy-card">
+                        <h3>{policy.Name}</h3>
+                        <p>Status: {policy.policyStatus}</p>
+                        <p>Product Chosen: {policy.TIS_Insurance_ProductID__r.Name}</p>
+                        <p>Premium: {policy.Premium__c}€</p>
+                        <p>Expiry Date: {policy.TIS_Policy_Expiring_Date__c}</p>
+                        <a href={policy.Contract_Link__c} target="_blank" class="view-contract">View Contract</a>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <template if:false={policies}>
+            <p>No policies found.</p>
+        </template>
+    </div>
+</template>

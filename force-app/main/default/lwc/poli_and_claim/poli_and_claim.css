@@ -1,0 +1,75 @@
+.my-area-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 50px;
+    padding: 20px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    color: #1a237e;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.header p {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    margin-bottom: 40px;
+}
+
+.cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px; /* Space between the cards */
+    flex-wrap: wrap; /* Ensures responsiveness */
+    margin-top: 20px; /* Adds some spacing from the heading */
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 300px;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.card-content {
+    text-align: center;
+    padding: 20px;
+}
+
+.card-content h2 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.card-content p {
+    font-size: 1rem;
+    color: #7f8c8d;
+}
+
+.card-section {
+    display: flex; /* Enables horizontal alignment */
+    justify-content: center; /* Centers cards horizontally */
+    align-items: flex-start; /* Aligns cards to the top */
+    gap: 20px; /* Adds space between the cards */
+    flex-wrap: wrap; /* Ensures responsiveness for smaller screens */
+    padding: 20px; /* Adds padding around the cards */
+    margin-top: 20px; /* Creates space between the header and cards */
+}

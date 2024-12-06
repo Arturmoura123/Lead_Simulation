@@ -2,7 +2,6 @@ import { LightningElement, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getClaimsForUser from '@salesforce/apex/ClaimController.getClaimsForUser';
 
-
 export default class CustomerArea extends NavigationMixin(LightningElement) {
     @track openClaims = [];
     @track closedClaims = [];
@@ -13,30 +12,24 @@ export default class CustomerArea extends NavigationMixin(LightningElement) {
     wiredClaims({ error, data }) {
         if (data) {
             console.log('Data received:', data);
-            // Map and format claims, adding default Reason if needed
             this.openClaims = data.Open.map(claim => ({
                 ...claim,
                 Reason: claim.Reason ? claim.Reason : 'No Reason Specified',
-                formattedDate: new Date(claim.CreatedDate).toLocaleDateString() // Only the date
+                formattedDate: new Date(claim.CreatedDate).toLocaleDateString()
             }));
             this.closedClaims = data.Closed.map(claim => ({
                 ...claim,
                 Reason: claim.Reason ? claim.Reason : 'No Reason Specified',
-                formattedDate: new Date(claim.ClosedDate).toLocaleDateString() // Only the date
+                formattedDate: new Date(claim.ClosedDate).toLocaleDateString()
             }));
-            console.log('Processed Open Claims:', this.openClaims);
-            console.log('Processed Closed Claims:', this.closedClaims);
         } else if (error) {
             console.error('Error fetching data:', error);
         }
     }
-    
 
     handleRowClick(event) {
         const recordId = event.currentTarget.dataset.id;
-        console.log('Row clicked');
         if (recordId) {
-            console.log('Navigating to record:', recordId); // Add this for debugging
             this[NavigationMixin.Navigate]({
                 type: 'standard__webPage',
                 attributes: {
@@ -45,8 +38,7 @@ export default class CustomerArea extends NavigationMixin(LightningElement) {
             });
         }
     }
-    
-    
+
     toggleOpenClaims() {
         this.showOpenClaims = !this.showOpenClaims;
     }
@@ -61,5 +53,15 @@ export default class CustomerArea extends NavigationMixin(LightningElement) {
 
     get closedClaimsIcon() {
         return this.showClosedClaims ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+
+    navigateToMyArea() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__webPage',
+            attributes: {
+                url: '/customer-area'
+            }
+        });
     }
 }

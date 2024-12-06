@@ -1,0 +1,25 @@
+<template>
+    <div class="my-area-container">
+        <div class="header">
+            <h1>My Area</h1>
+            <p>Your one-stop hub for managing policies and claims with ease</p>
+        </div>
+        <div class="card-section">
+            <!-- Claims Card -->
+            <div class="card" onclick={navigateToClaims}>
+                <div class="card-content">
+                    <h2>View My Claims</h2>
+                    <p>Track and manage all your insurance claims in one place.</p>
+                </div>
+            </div>
+            <!-- Policies Card -->
+            <div class="card" onclick={navigateToPolicies}>
+                <div class="card-content">
+                    <h2>View My Policies</h2>
+                    <p>Access details about your active and expired insurance policies.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+

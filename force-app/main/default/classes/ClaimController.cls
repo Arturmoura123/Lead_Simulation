@@ -49,4 +49,51 @@ public with sharing class ClaimController {
                                  WHERE PersonContactId = :user.ContactId LIMIT 1];
         return personAccount;
     }
+    
+    @AuraEnabled
+public static void attachPDF(List<String> pdfContents, String oppId) {
+    // Validate input
+    if (pdfContents == null || pdfContents.isEmpty()) {
+        throw new AuraHandledException('No PDF content provided.');
+    }
+
+    List<ContentVersion> contentVersions = new List<ContentVersion>();
+    List<ContentDocumentLink> contentDocumentLinks = new List<ContentDocumentLink>();
+
+    // Prepare ContentVersion records
+    for (String pdfContent : pdfContents) {
+        Blob pdfBlob = EncodingUtil.base64Decode(pdfContent);
+        ContentVersion contVerFile = new ContentVersion();
+        contVerFile.VersionData = pdfBlob;
+        contVerFile.Title = 'title'; 
+        contVerFile.ContentLocation = 'S'; // Standard Salesforce content location
+        contVerFile.PathOnClient = 'title.pdf';
+        contentVersions.add(contVerFile);
+    }
+
+    // Insert ContentVersion records in bulk
+    insert contentVersions;
+
+    // Query ContentDocument IDs for the inserted ContentVersion records
+    List<Id> contentVersionIds = new List<Id>();
+    for (ContentVersion cv : contentVersions) {
+        contentVersionIds.add(cv.Id);
+    }
+    Map<Id, ContentVersion> contentVersionMap = new Map<Id, ContentVersion>(
+        [SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id IN :contentVersionIds]
+    );
+
+    // Prepare ContentDocumentLink records
+    for (ContentVersion cv : contentVersions) {
+        ContentDocumentLink cdl = new ContentDocumentLink();
+        cdl.ContentDocumentId = contentVersionMap.get(cv.Id).ContentDocumentId;
+        cdl.LinkedEntityId = oppId; // Replace with dynamic record ID
+        cdl.ShareType = 'I';
+        cdl.Visibility = 'AllUsers';
+        contentDocumentLinks.add(cdl);
+    }
+
+    // Insert ContentDocumentLink records in bulk
+    insert contentDocumentLinks;
+}
 }

@@ -1,0 +1,88 @@
+<template>
+    <div class="profile-container">
+        <!-- Section: Header -->
+        <div class="profile-header">
+            <div class="profile-icon">
+                <lightning-icon icon-name="custom:custom63" size="large" alternative-text="Profile Icon"></lightning-icon>
+            </div>
+            <h2>My Profile</h2>
+        </div>
+
+        <!-- Section: Form -->
+        <div class="profile-form">
+            <div class="profile-row">
+                <lightning-input
+                    name="Name"
+                    label="Name"
+                    value={userProfile.Name}
+                    disabled
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+
+            <div class="profile-row">
+                <lightning-input
+                    name="TIS_NIF__c"
+                    label="NIF"
+                    value={userProfile.TIS_NIF__c}
+                    disabled
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+
+            <div class="profile-row">
+                <lightning-input
+                    name="PersonEmail"
+                    label="Email"
+                    value={userProfile.PersonEmail}
+                    disabled={isNotEditable}
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+
+            <div class="profile-row">
+                <lightning-input
+                    name="Phone"
+                    label="Phone"
+                    value={userProfile.Phone}
+                    disabled={isNotEditable}
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+
+            <div class="profile-row">
+                <lightning-input
+                    name="Address__c"
+                    label="Street"
+                    value={userProfile.Address__c}
+                    disabled={isNotEditable}
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+        </div>
+
+        <!-- Section: Buttons -->
+        <div class="profile-buttons">
+            <template if:true={isEditable}>
+                <lightning-button
+                    label="Cancel"
+                    variant="destructive"
+                    onclick={handleCancel}>
+                </lightning-button>
+                <lightning-button
+                    label="Save"
+                    variant="success"
+                    onclick={handleSave}>
+                </lightning-button>
+            </template>
+            <template if:false={isEditable}>
+                <lightning-button
+                    class="edit-button"
+                    label="Edit"
+                    variant="brand"
+                    onclick={handleEdit}>
+                </lightning-button>
+            </template>
+        </div>
+    </div>
+</template>
